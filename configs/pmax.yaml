@@ -1,0 +1,30 @@
+---
+server:
+  host: "0.0.0.0"
+  port: "9443"
+  uri: "/metrics"
+collection:
+  interval: "5m"      # diagnostic perf data has 5-minute granularity — faster polling re-reads the same point
+  timeout: "120s"
+  maxConcurrent: 8    # cap on in-flight per-object performance queries per Unisphere
+  volumeMetrics: false        # opt-in per-volume (LUN) perf (high cardinality — one series set per device)
+  volumeInventory: false      # opt-in per-volume capacity + identity (WWN, name) — one GET per volume per cycle
+  volumeStorageGroups: []     # optional SG scope for both volume collectors; empty = all SGs
+otel:
+  enabled: false
+  endpoint: "localhost:4317"
+  insecure: true
+  interval: "30s"
+servers:
+  # Single-instance quickstart: set PMAX1_HOSTNAME, PMAX1_USERNAME, PMAX1_PASSWORD
+  # in the environment (or a .env file). config.yaml is the source of truth —
+  # for multiple Unisphere instances add one entry per instance (literal values
+  # or ${PMAX2_*} refs).
+  - name: unisphere-prod-01
+    host: "${PMAX1_HOSTNAME}"
+    port: 8443
+    username: "${PMAX1_USERNAME}"
+    password: "${PMAX1_PASSWORD}"
+    insecureSkipVerify: true
+    apiVersion: "100"   # Unisphere REST version prefix for /system and /sloprovisioning
+    arrays: []          # optional symmetrixId allowlist; empty = all perf-registered local arrays

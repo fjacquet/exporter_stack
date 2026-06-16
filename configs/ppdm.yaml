@@ -1,0 +1,26 @@
+---
+server:
+  host: "0.0.0.0"
+  port: "9442"
+  uri: "/metrics"
+collection:
+  interval: "5m"
+  timeout: "60s"
+  lookback: "24h"
+  assetAgeThreshold: "24h"
+  perJobActivities: false   # set true for a per-job backup report table (higher cardinality)
+otel:
+  enabled: false
+  endpoint: "localhost:4317"
+  insecure: true
+  interval: "30s"
+servers:
+  # Single-server quickstart: set PPDM1_HOSTNAME, PPDM1_USERNAME, PPDM1_PASSWORD
+  # in the environment (or a .env file). config.yaml is the source of truth —
+  # for multiple servers add one entry per server (literal values or ${PPDM2_*} refs).
+  - name: ppdm-prod-01
+    host: "${PPDM1_HOSTNAME}"
+    port: 8443
+    username: "${PPDM1_USERNAME}"
+    password: "${PPDM1_PASSWORD}"
+    insecureSkipVerify: true

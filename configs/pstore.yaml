@@ -1,0 +1,32 @@
+server:
+  host: "0.0.0.0"
+  port: "9446"
+  uri: "/metrics"
+  logName: ""
+
+collection:
+  interval: "30s"
+  timeout: "20s"
+
+opentelemetry:
+  metrics:
+    enabled: false
+    endpoint: "localhost:4317"
+    insecure: true
+    interval: "30s"
+  tracing:
+    enabled: false
+    endpoint: "localhost:4317"
+    insecure: true
+    samplingRate: 0.1
+
+arrays:
+  # Single-array quickstart: set PSTORE1_HOSTNAME, PSTORE1_USERNAME, PSTORE1_PASSWORD
+  # in the environment (or a .env file) and the values below expand automatically.
+  # For multiple arrays use literal values or add your own ${PSTORE2_HOSTNAME} refs.
+  - name: pstore-1
+    endpoint: "https://${PSTORE1_HOSTNAME}/api/rest"
+    username: "${PSTORE1_USERNAME}"
+    password: "${PSTORE1_PASSWORD}"
+    insecureSkipVerify: true
+    # interval: Five_Mins

@@ -1,0 +1,69 @@
+---
+# PowerFlex exporter configuration.
+# One exporter process monitors many PowerFlex clusters (Gen1 and Gen2, auto-detected)
+# and exposes their metrics via a Prometheus /metrics endpoint and (optionally) an OTLP push.
+
+server:
+  host: "0.0.0.0"
+  port: "9445"
+  uri: "/metrics"
+  # Absolute path so it resolves the same in containers and under systemd.
+  # Empty string -> stdout only (recommended for k8s/systemd, captured by the runtime).
+  # If the path isn't writable, logging falls back to stdout with a warning.
+  logName: "stdout"
+
+collection:
+  interval: "10s" # how often the background loop polls every cluster
+  timeout: "8s" # per-cluster collection timeout
+  # Cap on clusters polled in parallel per cycle. 0 (default) = unlimited.
+  # Set this when monitoring many clusters to avoid bursts of concurrent API load.
+  maxConcurrentClusters: 0
+  # Decimation (Gen2 only): collect the slowResourceTypes statistics every Nth cycle,
+  # reusing the prior cycle's samples in between, to cut API load on large arrays.
+  # slowResourceEveryN: 1 (default) disables it. Gen1 statistics arrive in a single
+  # query and are always collected in full.
+  slowResourceEveryN: 1
+  slowResourceTypes: [] # e.g. ["DeviceGroup", "Sdt", "ProtectionDomain"]
+
+# Optional Kubernetes workload enrichment. When enabled and a cluster is reachable,
+# volume metrics gain namespace / persistent_volume_claim / persistent_volume /
+# storage_class labels and SDC metrics gain a k8s_node label, resolved from the
+# cluster's PersistentVolumes and Nodes. Portable: degrades to a no-op when no cluster
+# config is reachable, so the same binary runs standalone or in-cluster.
+kubernetes:
+  enabled: false
+  refreshInterval: "60s" # PV/Node cache refresh period
+  csiDriverName: "csi-vxflexos.dellemc.com" # CSI driver to match PowerFlex PVs
+  # kubeconfig: "/path/to/kubeconfig"  # optional; in-cluster / default rules used when empty
+
+opentelemetry:
+  # OTLP metric push (OpenTelemetry-first). Metrics are pushed to a collector/backend.
+  metrics:
+    enabled: false
+    endpoint: "localhost:4317"
+    insecure: true
+    interval: "10s"
+  # Optional distributed tracing for diagnosing slow collection cycles.
+  tracing:
+    enabled: false
+    endpoint: "localhost:4317"
+    insecure: true
+    samplingRate: 0.1
+
+# PowerFlex clusters to monitor (Gen1 and Gen2 are auto-detected). A 'monitor'-type user is sufficient.
+# For PowerFlex 4.0+, 'gateway' is the primary ingress IP (PowerFlex Manager UI).
+# Gateway, username, and password support ${ENV_VAR} interpolation or passwordFile for secrets.
+# Single-cluster quickstart: set PFLEX1_GATEWAY / PFLEX1_USERNAME / PFLEX1_PASSWORD in .env (or your shell)
+# and the compose stack picks them up automatically.
+# Multi-cluster: add one entry per cluster with literal values or your own env refs (e.g. ${PFLEX2_GATEWAY}).
+clusters:
+  - name: flex-cluster1
+    gateway: "${PFLEX1_GATEWAY}"   # literal style: gateway: flex-clu1-gw01
+    username: "${PFLEX1_USERNAME}" # literal style: username: flex-username
+    password: "${PFLEX1_PASSWORD}"
+    insecureSkipVerify: true
+#  - name: flex-cluster2
+#    gateway: flex-clu2-gw01
+#    username: flex-username
+#    passwordFile: /etc/pflex_exporter/flex2.pass
+#    insecureSkipVerify: true
