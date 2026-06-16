@@ -1,0 +1,9 @@
+# Local secrets / real targets
+.env
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Dashboards are fetched at runtime, never committed
+/grafana/dashboards/
