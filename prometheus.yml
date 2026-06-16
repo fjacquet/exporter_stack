@@ -1,0 +1,26 @@
+global:
+  scrape_interval: 30s
+  scrape_timeout: 15s
+
+# One Prometheus scrapes every exporter by Docker service name on the shared network.
+scrape_configs:
+  - job_name: idrac_exporter
+    static_configs: [{ targets: ['idrac_exporter:9348'] }]
+  - job_name: obs_exporter
+    static_configs: [{ targets: ['obs_exporter:9438'] }]
+  - job_name: nbu_exporter
+    static_configs: [{ targets: ['nbu_exporter:9440'] }]
+  - job_name: ppdd_exporter
+    static_configs: [{ targets: ['ppdd_exporter:9441'] }]
+  - job_name: ppdm_exporter
+    static_configs: [{ targets: ['ppdm_exporter:9442'] }]
+  - job_name: pmax_exporter
+    static_configs: [{ targets: ['pmax_exporter:9443'] }]
+  - job_name: pscale_exporter
+    static_configs: [{ targets: ['pscale_exporter:9444'] }]
+  - job_name: pflex_exporter
+    static_configs: [{ targets: ['pflex_exporter:9445'] }]
+  - job_name: pstore_exporter
+    static_configs: [{ targets: ['pstore_exporter:9446'] }]
+  - job_name: nsr_exporter
+    static_configs: [{ targets: ['nsr_exporter:9447'] }]
