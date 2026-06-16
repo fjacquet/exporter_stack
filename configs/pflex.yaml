@@ -52,10 +52,10 @@ opentelemetry:
 
 # PowerFlex clusters to monitor (Gen1 and Gen2 are auto-detected). A 'monitor'-type user is sufficient.
 # For PowerFlex 4.0+, 'gateway' is the primary ingress IP (PowerFlex Manager UI).
-# Gateway, username, and password support ${ENV_VAR} interpolation or passwordFile for secrets.
+# Gateway, username, and password support <ENV_VAR> interpolation or passwordFile for secrets.
 # Single-cluster quickstart: set PFLEX1_GATEWAY / PFLEX1_USERNAME / PFLEX1_PASSWORD in .env (or your shell)
 # and the compose stack picks them up automatically.
-# Multi-cluster: add one entry per cluster with literal values or your own env refs (e.g. ${PFLEX2_GATEWAY}).
+# Multi-cluster: add one entry per cluster with literal values or your own env refs (e.g. <PFLEX2_GATEWAY>).
 clusters:
   - name: flex-cluster1
     gateway: "${PFLEX1_GATEWAY}"   # literal style: gateway: flex-clu1-gw01

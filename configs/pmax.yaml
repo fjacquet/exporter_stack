@@ -19,7 +19,7 @@ servers:
   # Single-instance quickstart: set PMAX1_HOSTNAME, PMAX1_USERNAME, PMAX1_PASSWORD
   # in the environment (or a .env file). config.yaml is the source of truth —
   # for multiple Unisphere instances add one entry per instance (literal values
-  # or ${PMAX2_*} refs).
+  # or <PMAX2_*> refs).
   - name: unisphere-prod-01
     host: "${PMAX1_HOSTNAME}"
     port: 8443

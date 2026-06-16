@@ -36,7 +36,7 @@ services:
     environment:
       - IDRAC1_HOST=${IDRAC1_HOST:-192.168.1.1}
       - IDRAC1_USERNAME=${IDRAC1_USERNAME:-root}
-      - IDRAC1_PASSWORD=${IDRAC1_PASSWORD:-}
+      - IDRAC1_PASSWORD=${IDRAC1_PASSWORD:-changeme}
     ports: ["9348:9348"]
     networks: [exporters]
     restart: unless-stopped
@@ -50,7 +50,7 @@ services:
     environment:
       - OBS1_HOSTNAME=${OBS1_HOSTNAME:-objectscale01.example.com}
       - OBS1_USERNAME=${OBS1_USERNAME:-obs-monitor}
-      - OBS1_PASSWORD=${OBS1_PASSWORD:-}
+      - OBS1_PASSWORD=${OBS1_PASSWORD:-changeme}
     ports: ["9438:9438"]
     networks: [exporters]
     restart: unless-stopped
@@ -65,7 +65,7 @@ services:
       - ./configs/nbu.yaml:/etc/nbu_exporter/config.yaml:ro
     environment:
       - NBU1_HOSTNAME=${NBU1_HOSTNAME:-master.my.domain}
-      - NBU1_APIKEY=${NBU1_APIKEY:-}
+      - NBU1_APIKEY=${NBU1_APIKEY:-changeme}
     ports: ["9440:9440"]
     networks: [exporters]
     restart: unless-stopped
@@ -79,7 +79,7 @@ services:
     environment:
       - PPDD1_HOSTNAME=${PPDD1_HOSTNAME:-ppdd01.example.com}
       - PPDD1_USERNAME=${PPDD1_USERNAME:-ppdd-monitor}
-      - PPDD1_PASSWORD=${PPDD1_PASSWORD:-}
+      - PPDD1_PASSWORD=${PPDD1_PASSWORD:-changeme}
     ports: ["9441:9441"]
     networks: [exporters]
     restart: unless-stopped
@@ -93,7 +93,7 @@ services:
     environment:
       - PPDM1_HOSTNAME=${PPDM1_HOSTNAME:-ppdm01.example.com}
       - PPDM1_USERNAME=${PPDM1_USERNAME:-ppdm-monitor}
-      - PPDM1_PASSWORD=${PPDM1_PASSWORD:-}
+      - PPDM1_PASSWORD=${PPDM1_PASSWORD:-changeme}
     ports: ["9442:9442"]
     networks: [exporters]
     restart: unless-stopped
@@ -107,7 +107,7 @@ services:
     environment:
       - PMAX1_HOSTNAME=${PMAX1_HOSTNAME:-unisphere01.example.com}
       - PMAX1_USERNAME=${PMAX1_USERNAME:-pmax-monitor}
-      - PMAX1_PASSWORD=${PMAX1_PASSWORD:-}
+      - PMAX1_PASSWORD=${PMAX1_PASSWORD:-changeme}
     ports: ["9443:9443"]
     networks: [exporters]
     restart: unless-stopped
@@ -121,7 +121,7 @@ services:
     environment:
       - PSCALE1_HOSTNAME=${PSCALE1_HOSTNAME:-pscale-clu1.example.com}
       - PSCALE1_USERNAME=${PSCALE1_USERNAME:-pscale-monitor}
-      - PSCALE1_PASSWORD=${PSCALE1_PASSWORD:-}
+      - PSCALE1_PASSWORD=${PSCALE1_PASSWORD:-changeme}
     ports: ["9444:9444"]
     networks: [exporters]
     restart: unless-stopped
@@ -135,7 +135,7 @@ services:
     environment:
       - PFLEX1_GATEWAY=${PFLEX1_GATEWAY:-flex-clu1-gw01}
       - PFLEX1_USERNAME=${PFLEX1_USERNAME:-flex-username}
-      - PFLEX1_PASSWORD=${PFLEX1_PASSWORD:-}
+      - PFLEX1_PASSWORD=${PFLEX1_PASSWORD:-changeme}
     ports: ["9445:9445"]
     networks: [exporters]
     restart: unless-stopped
@@ -149,7 +149,7 @@ services:
     environment:
       - PSTORE1_HOSTNAME=${PSTORE1_HOSTNAME:-10.0.0.1}
       - PSTORE1_USERNAME=${PSTORE1_USERNAME:-admin}
-      - PSTORE1_PASSWORD=${PSTORE1_PASSWORD:-}
+      - PSTORE1_PASSWORD=${PSTORE1_PASSWORD:-changeme}
     ports: ["9446:9446"]
     networks: [exporters]
     restart: unless-stopped
@@ -163,7 +163,7 @@ services:
     environment:
       - NSR1_HOST=${NSR1_HOST:-https://networker-prod-01.local:9090}
       - NSR1_USERNAME=${NSR1_USERNAME:-admin}
-      - NSR1_PASSWORD=${NSR1_PASSWORD:-}
+      - NSR1_PASSWORD=${NSR1_PASSWORD:-changeme}
     ports: ["9447:9447"]
     networks: [exporters]
     restart: unless-stopped

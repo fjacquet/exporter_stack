@@ -1,6 +1,6 @@
 # Source-of-truth config for the docker-compose demo stack.
 # Secrets come from the environment (compose sets IDRAC1_*; .env is gitignored).
-# ${VAR} references are expanded at load time. config.yaml is the way; .env is nice.
+# <VAR> references are expanded at load time. config.yaml is the way; .env is nice.
 address: 0.0.0.0
 port: 9348
 timeout: 60 # BMC Redfish calls can be slow

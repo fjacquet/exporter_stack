@@ -17,7 +17,7 @@ otel:
 servers:
   # Single-server quickstart: set PPDM1_HOSTNAME, PPDM1_USERNAME, PPDM1_PASSWORD
   # in the environment (or a .env file). config.yaml is the source of truth —
-  # for multiple servers add one entry per server (literal values or ${PPDM2_*} refs).
+  # for multiple servers add one entry per server (literal values or <PPDM2_*> refs).
   - name: ppdm-prod-01
     host: "${PPDM1_HOSTNAME}"
     port: 8443

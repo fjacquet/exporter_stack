@@ -32,9 +32,9 @@ opentelemetry:
 # Multi-cluster: add one entry per cluster with literal values or your own env refs,
 # e.g.:
 #   - name: pscale-cluster2
-#     endpoint: "${PSCALE2_HOSTNAME}"
-#     username: "${PSCALE2_USERNAME}"
-#     password: "${PSCALE2_PASSWORD}"
+#     endpoint: "<PSCALE2_HOSTNAME>"
+#     username: "<PSCALE2_USERNAME>"
+#     password: "<PSCALE2_PASSWORD>"
 # and pass PSCALE2_* through in compose environment:.
 clusters:
   - name: pscale-cluster1

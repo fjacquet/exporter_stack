@@ -14,9 +14,9 @@ nbuserver:
   uri: "/netbackup"
   domain: "my.domain"
   domainType: "NT"
-  # host and apiKey support ${ENV_VAR} interpolation — set values in a .env
+  # host and apiKey support <ENV_VAR> interpolation — set values in a .env
   # file (gitignored) and reference them here.  Literal values also work
-  # (behaviour is unchanged when no ${...} syntax is present).
+  # (behaviour is unchanged when no <...> syntax is present).
   # Literal style (default, backwards-compatible):
   #   host: "master.my.domain"
   #   apiKey: "my-api-key"

@@ -23,7 +23,7 @@ opentelemetry:
 arrays:
   # Single-array quickstart: set PSTORE1_HOSTNAME, PSTORE1_USERNAME, PSTORE1_PASSWORD
   # in the environment (or a .env file) and the values below expand automatically.
-  # For multiple arrays use literal values or add your own ${PSTORE2_HOSTNAME} refs.
+  # For multiple arrays use literal values or add your own <PSTORE2_HOSTNAME> refs.
   - name: pstore-1
     endpoint: "https://${PSTORE1_HOSTNAME}/api/rest"
     username: "${PSTORE1_USERNAME}"
