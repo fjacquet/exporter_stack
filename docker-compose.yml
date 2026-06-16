@@ -1,0 +1,205 @@
+---
+# exporter_stack — public, self-contained observability for the exporter family.
+#
+#   cp .env.example .env        # set creds to point at real targets (optional)
+#   docker compose up -d
+#
+#   Grafana     http://localhost:3000   (admin/admin) — one folder per exporter
+#   Prometheus  http://localhost:9090   (Status > Targets)
+#
+# Exporters pull published GHCR images. Dashboards are fetched fresh from each
+# exporter's authoritative GitHub repo at startup (never vendored here).
+# Targets report up=0 until real creds are set in .env.
+
+services:
+  # ===================== dashboard fetcher (one-shot) =====================
+  dashboard-fetcher:
+    image: alpine:3.20
+    container_name: es_dashboard_fetcher
+    command: ["sh", "-c", "apk add --no-cache curl jq >/dev/null && sh /scripts/fetch-dashboards.sh"]
+    environment:
+      - DASHBOARD_REF=${DASHBOARD_REF:-default}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+    volumes:
+      - ./scripts:/scripts:ro
+      - ./dashboards.manifest.txt:/manifest/dashboards.manifest.txt:ro
+      - dashboards:/dashboards
+    networks: [exporters]
+    restart: "no"
+
+  # ===================== exporters (GHCR images) =====================
+  idrac_exporter:
+    image: ghcr.io/fjacquet/idrac_exporter:${IDRAC_TAG:-latest}
+    container_name: es_idrac_exporter
+    volumes:
+      - ./configs/idrac.yaml:/etc/prometheus/idrac.yml:ro
+    environment:
+      - IDRAC1_HOST=${IDRAC1_HOST:-192.168.1.1}
+      - IDRAC1_USERNAME=${IDRAC1_USERNAME:-root}
+      - IDRAC1_PASSWORD=${IDRAC1_PASSWORD:-}
+    ports: ["9348:9348"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  obs_exporter:
+    image: ghcr.io/fjacquet/obs_exporter:${OBS_TAG:-latest}
+    container_name: es_obs_exporter
+    command: ["--config", "/etc/obs_exporter/config.yaml"]
+    volumes:
+      - ./configs/obs.yaml:/etc/obs_exporter/config.yaml:ro
+    environment:
+      - OBS1_HOSTNAME=${OBS1_HOSTNAME:-objectscale01.example.com}
+      - OBS1_USERNAME=${OBS1_USERNAME:-obs-monitor}
+      - OBS1_PASSWORD=${OBS1_PASSWORD:-}
+    ports: ["9438:9438"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  nbu_exporter:
+    image: ghcr.io/fjacquet/nbu_exporter:${NBU_TAG:-latest}
+    container_name: es_nbu_exporter
+    security_opt:
+      - no-new-privileges:true
+    command: ["--config", "/etc/nbu_exporter/config.yaml"]
+    volumes:
+      - ./configs/nbu.yaml:/etc/nbu_exporter/config.yaml:ro
+    environment:
+      - NBU1_HOSTNAME=${NBU1_HOSTNAME:-master.my.domain}
+      - NBU1_APIKEY=${NBU1_APIKEY:-}
+    ports: ["9440:9440"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  ppdd_exporter:
+    image: ghcr.io/fjacquet/ppdd_exporter:${PPDD_TAG:-latest}
+    container_name: es_ppdd_exporter
+    command: ["--config", "/etc/ppdd_exporter/config.yaml"]
+    volumes:
+      - ./configs/ppdd.yaml:/etc/ppdd_exporter/config.yaml:ro
+    environment:
+      - PPDD1_HOSTNAME=${PPDD1_HOSTNAME:-ppdd01.example.com}
+      - PPDD1_USERNAME=${PPDD1_USERNAME:-ppdd-monitor}
+      - PPDD1_PASSWORD=${PPDD1_PASSWORD:-}
+    ports: ["9441:9441"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  ppdm_exporter:
+    image: ghcr.io/fjacquet/ppdm_exporter:${PPDM_TAG:-latest}
+    container_name: es_ppdm_exporter
+    command: ["--config", "/etc/ppdm_exporter/config.yaml"]
+    volumes:
+      - ./configs/ppdm.yaml:/etc/ppdm_exporter/config.yaml:ro
+    environment:
+      - PPDM1_HOSTNAME=${PPDM1_HOSTNAME:-ppdm01.example.com}
+      - PPDM1_USERNAME=${PPDM1_USERNAME:-ppdm-monitor}
+      - PPDM1_PASSWORD=${PPDM1_PASSWORD:-}
+    ports: ["9442:9442"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  pmax_exporter:
+    image: ghcr.io/fjacquet/pmax_exporter:${PMAX_TAG:-latest}
+    container_name: es_pmax_exporter
+    command: ["--config", "/etc/pmax_exporter/config.yaml"]
+    volumes:
+      - ./configs/pmax.yaml:/etc/pmax_exporter/config.yaml:ro
+    environment:
+      - PMAX1_HOSTNAME=${PMAX1_HOSTNAME:-unisphere01.example.com}
+      - PMAX1_USERNAME=${PMAX1_USERNAME:-pmax-monitor}
+      - PMAX1_PASSWORD=${PMAX1_PASSWORD:-}
+    ports: ["9443:9443"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  pscale_exporter:
+    image: ghcr.io/fjacquet/pscale_exporter:${PSCALE_TAG:-latest}
+    container_name: es_pscale_exporter
+    command: ["--config", "/etc/pscale_exporter/config.yaml"]
+    volumes:
+      - ./configs/pscale.yaml:/etc/pscale_exporter/config.yaml:ro
+    environment:
+      - PSCALE1_HOSTNAME=${PSCALE1_HOSTNAME:-pscale-clu1.example.com}
+      - PSCALE1_USERNAME=${PSCALE1_USERNAME:-pscale-monitor}
+      - PSCALE1_PASSWORD=${PSCALE1_PASSWORD:-}
+    ports: ["9444:9444"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  pflex_exporter:
+    image: ghcr.io/fjacquet/pflex_exporter:${PFLEX_TAG:-latest}
+    container_name: es_pflex_exporter
+    command: ["--config", "/etc/pflex_exporter/config.yaml"]
+    volumes:
+      - ./configs/pflex.yaml:/etc/pflex_exporter/config.yaml:ro
+    environment:
+      - PFLEX1_GATEWAY=${PFLEX1_GATEWAY:-flex-clu1-gw01}
+      - PFLEX1_USERNAME=${PFLEX1_USERNAME:-flex-username}
+      - PFLEX1_PASSWORD=${PFLEX1_PASSWORD:-}
+    ports: ["9445:9445"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  pstore_exporter:
+    image: ghcr.io/fjacquet/pstore_exporter:${PSTORE_TAG:-latest}
+    container_name: es_pstore_exporter
+    command: ["--config", "/etc/pstore_exporter/config.yaml"]
+    volumes:
+      - ./configs/pstore.yaml:/etc/pstore_exporter/config.yaml:ro
+    environment:
+      - PSTORE1_HOSTNAME=${PSTORE1_HOSTNAME:-10.0.0.1}
+      - PSTORE1_USERNAME=${PSTORE1_USERNAME:-admin}
+      - PSTORE1_PASSWORD=${PSTORE1_PASSWORD:-}
+    ports: ["9446:9446"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  nsr_exporter:
+    image: ghcr.io/fjacquet/nsr_exporter:${NSR_TAG:-latest}
+    container_name: es_nsr_exporter
+    command: ["--config", "/etc/nsr_exporter/config.yaml"]
+    volumes:
+      - ./configs/nsr.yaml:/etc/nsr_exporter/config.yaml:ro
+    environment:
+      - NSR1_HOST=${NSR1_HOST:-https://networker-prod-01.local:9090}
+      - NSR1_USERNAME=${NSR1_USERNAME:-admin}
+      - NSR1_PASSWORD=${NSR1_PASSWORD:-}
+    ports: ["9447:9447"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  # ===================== shared observability =====================
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: es_prometheus
+    volumes:
+      - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports: ["9090:9090"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:latest
+    container_name: es_grafana
+    environment:
+      - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER:-admin}
+      - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:-admin}
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      - dashboards:/var/lib/grafana/dashboards
+    ports: ["3000:3000"]
+    networks: [exporters]
+    depends_on:
+      dashboard-fetcher:
+        condition: service_completed_successfully
+      prometheus:
+        condition: service_started
+    restart: unless-stopped
+
+networks:
+  exporters:
+    driver: bridge
+
+volumes:
+  dashboards:
