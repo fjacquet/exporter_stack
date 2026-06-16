@@ -1,12 +1,12 @@
 # <exporter>  <repo>                     <ref>     <path...>
-# ref "default" = repo default branch.  A path ending in "/" = every *.json in that dir.
+# ref "default" = repo default branch.  A path ending in "/" = every *.json at or below that dir (recursive).
 idrac    fjacquet/idrac_exporter   default  grafana/idrac.json grafana/idrac_overview.json grafana/pdu.json grafana/status-alternative.json
 obs      fjacquet/obs_exporter     default  grafana/dashboards/
 nbu      fjacquet/nbu_exporter     default  grafana/
 ppdd     fjacquet/ppdd_exporter    default  grafana/dashboards/
 ppdm     fjacquet/ppdm_exporter    default  grafana/dashboards/
 pmax     fjacquet/pmax_exporter    default  grafana/dashboards/
-pscale   fjacquet/pscale_exporter  default  grafana/dashboards/
+pscale   fjacquet/pscale_exporter  default  grafana/provisioning/dashboards/json/
 pflex    fjacquet/pflex_exporter   default  grafana/gen1/ grafana/gen2/
 pstore   fjacquet/pstore_exporter  default  grafana/dashboards/
 nsr      fjacquet/nsr_exporter     default  grafana/dashboards/
