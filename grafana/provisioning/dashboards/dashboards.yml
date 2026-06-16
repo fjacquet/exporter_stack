@@ -1,0 +1,15 @@
+# Auto-provision every exporter's bundled dashboards. Each repo's dashboard dir is
+# mounted under /var/lib/grafana/dashboards/<exporter>/ in docker-compose.yml;
+# foldersFromFilesStructure turns each into its own Grafana folder.
+apiVersion: 1
+
+providers:
+  - name: exporters
+    orgId: 1
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /var/lib/grafana/dashboards
+      foldersFromFilesStructure: true
