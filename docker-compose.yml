@@ -168,6 +168,20 @@ services:
     networks: [exporters]
     restart: unless-stopped
 
+  pve_exporter:
+    image: ghcr.io/fjacquet/pve_exporter:${PVE_TAG:-latest}
+    container_name: es_pve_exporter
+    command: ["--config", "/etc/pve_exporter/config.yaml"]
+    volumes:
+      - ./configs/pve.yaml:/etc/pve_exporter/config.yaml:ro
+    environment:
+      - PVE1_HOST=${PVE1_HOST:-10.0.0.1:8006}
+      - PVE1_TOKEN_ID=${PVE1_TOKEN_ID:-exporter@pam!prometheus}
+      - PVE1_TOKEN_SECRET=${PVE1_TOKEN_SECRET:-changeme}
+    ports: ["9221:9221"]
+    networks: [exporters]
+    restart: unless-stopped
+
   # ===================== shared observability =====================
   prometheus:
     image: prom/prometheus:latest

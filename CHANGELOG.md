@@ -4,6 +4,14 @@ All notable changes to this project are documented here. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and this project adheres to
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Added
+- `pve_exporter` to the stack (11 exporters total): Proxmox VE metrics on port 9221,
+  with token-based API auth (`PVE1_HOST`, `PVE1_TOKEN_ID`, `PVE1_TOKEN_SECRET`).
+- Six Proxmox dashboards fetched from `fjacquet/pve_exporter` at startup
+  (pve-cluster-overview, pve-node, pve-guest, pve-storage, pve-backup-dr, pve-ha-quorum).
+
 ## [0.1.0] - 2026-06-16
 
 First public release.

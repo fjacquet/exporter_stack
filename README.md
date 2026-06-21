@@ -35,6 +35,7 @@ Tear down with `docker compose down`.
 | pflex  | `pflex_exporter`  | 9445 | Dell PowerFlex |
 | pstore | `pstore_exporter` | 9446 | Dell PowerStore |
 | nsr    | `nsr_exporter`    | 9447 | Dell NetWorker |
+| pve    | `pve_exporter`    | 9221 | Proxmox Virtual Environment |
 
 ## Configuring real targets
 
