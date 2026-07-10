@@ -36,6 +36,9 @@ Tear down with `docker compose down`.
 | pstore | `pstore_exporter` | 9446 | Dell PowerStore |
 | nsr    | `nsr_exporter`    | 9447 | Dell NetWorker |
 | pve    | `pve_exporter`    | 9221 | Proxmox Virtual Environment |
+| vmware | `vmware_licenses_exporter` | 9106 | VMware vSphere licenses |
+| m365   | `m365_licenses_exporter`   | 9105 | Microsoft 365 licenses |
+| veeam  | `veeam_licenses_exporter`  | 9107 | Veeam Backup Enterprise Manager licenses |
 
 ## Configuring real targets
 

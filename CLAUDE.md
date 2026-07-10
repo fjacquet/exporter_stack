@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## What this repo is
 
-A **public, self-contained Docker Compose stack**, not a Go exporter. It runs all 10 of
+A **public, self-contained Docker Compose stack**, not a Go exporter. It runs all 14 of
 Fred's Prometheus exporters from **published GHCR images** behind one Prometheus + Grafana.
 Grafana dashboards are **fetched fresh from each exporter's authoritative GitHub repo** at
 startup — never vendored here. The individual exporter repos are governed by the
@@ -25,7 +25,7 @@ docker compose up -d --force-recreate dashboard-fetcher grafana   # re-fetch das
 
 ## Architecture (spans multiple files)
 
-- **`docker-compose.yml`** — 10 exporter services pulling `ghcr.io/fjacquet/<repo>`, plus a
+- **`docker-compose.yml`** — 14 exporter services pulling `ghcr.io/fjacquet/<repo>`, plus a
   one-shot `dashboard-fetcher`, Prometheus, and Grafana. Container names use the `es_` prefix.
 - **`dashboard-fetcher`** — alpine + curl + jq running `scripts/fetch-dashboards.sh`, which
   reads `dashboards.manifest.txt`, resolves each repo's default branch, lists dashboard files
@@ -36,7 +36,8 @@ docker compose up -d --force-recreate dashboard-fetcher grafana   # re-fetch das
 - **`configs/<exporter>.yaml`** — committed, generic, reference `${VAR}`; real values come from
   `.env`. Each sets the exporter's canonical `server.port`; file logging is routed to stdout.
 - **Ports** — unique per exporter: idrac 9348, obs 9438, nbu 9440, ppdd 9441, ppdm 9442,
-  pmax 9443, pscale 9444, pflex 9445, pstore 9446, nsr 9447. A port change must be edited in
+  pmax 9443, pscale 9444, pflex 9445, pstore 9446, nsr 9447, pve 9221, and the licensing
+  trio m365 9105, vmware 9106, veeam 9107. A port change must be edited in
   `docker-compose.yml`, `prometheus.yml`, and the README table.
 
 ## Gotchas

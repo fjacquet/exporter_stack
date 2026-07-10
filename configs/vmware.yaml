@@ -1,0 +1,20 @@
+---
+# vmware_licenses_exporter — VMware vSphere license exporter.
+# Secret-bearing fields accept ${ENV_VAR} refs, expanded at load. Real values come
+# from .env (VC_HOST, VC_USERNAME, VC_PASSWORD); config.yaml stays the source of truth.
+
+collection:
+  interval: 2h            # how often to poll vCenter LicenseManager
+
+otlp:
+  endpoint: ""            # empty disables OTLP; e.g. "otel-collector:4317"
+  insecure: false
+
+vmware:
+  enabled: true
+  vcenters:
+    - instance: primary
+      host: ${VC_HOST}              # e.g. https://vcenter.example.com
+      username: ${VC_USERNAME}
+      password: ${VC_PASSWORD}
+      insecureSkipVerify: true
