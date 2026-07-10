@@ -26,3 +26,9 @@ scrape_configs:
     static_configs: [{ targets: ['nsr_exporter:9447'] }]
   - job_name: pve
     static_configs: [{ targets: ['pve_exporter:9221'] }]
+  - job_name: vmware_licenses_exporter
+    static_configs: [{ targets: ['vmware_licenses_exporter:9106'] }]
+  - job_name: m365_licenses_exporter
+    static_configs: [{ targets: ['m365_licenses_exporter:9105'] }]
+  - job_name: veeam_licenses_exporter
+    static_configs: [{ targets: ['veeam_licenses_exporter:9107'] }]

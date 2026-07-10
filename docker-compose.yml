@@ -182,6 +182,48 @@ services:
     networks: [exporters]
     restart: unless-stopped
 
+  vmware_licenses_exporter:
+    image: ghcr.io/fjacquet/vmware_licenses_exporter:${VMWARE_LICENSES_TAG:-latest}
+    container_name: es_vmware_licenses_exporter
+    command: ["--config", "/etc/vmware_licenses_exporter/config.yaml"]
+    volumes:
+      - ./configs/vmware.yaml:/etc/vmware_licenses_exporter/config.yaml:ro
+    environment:
+      - VC_HOST=${VC_HOST:-https://vcenter.example.com}
+      - VC_USERNAME=${VC_USERNAME:-svc-ro}
+      - VC_PASSWORD=${VC_PASSWORD:-changeme}
+    ports: ["9106:9106"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  m365_licenses_exporter:
+    image: ghcr.io/fjacquet/m365_licenses_exporter:${M365_LICENSES_TAG:-latest}
+    container_name: es_m365_licenses_exporter
+    command: ["--config", "/etc/m365_licenses_exporter/config.yaml"]
+    volumes:
+      - ./configs/m365.yaml:/etc/m365_licenses_exporter/config.yaml:ro
+    environment:
+      - M365_TENANT_ID=${M365_TENANT_ID:-00000000-0000-0000-0000-000000000000}
+      - M365_CLIENT_ID=${M365_CLIENT_ID:-00000000-0000-0000-0000-000000000000}
+      - M365_CLIENT_SECRET=${M365_CLIENT_SECRET:-changeme}
+    ports: ["9105:9105"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  veeam_licenses_exporter:
+    image: ghcr.io/fjacquet/veeam_licenses_exporter:${VEEAM_LICENSES_TAG:-latest}
+    container_name: es_veeam_licenses_exporter
+    command: ["--config", "/etc/veeam_licenses_exporter/config.yaml"]
+    volumes:
+      - ./configs/veeam.yaml:/etc/veeam_licenses_exporter/config.yaml:ro
+    environment:
+      - VEEAM_EM_HOST=${VEEAM_EM_HOST:-https://em.example.com:9398}
+      - VEEAM_USERNAME=${VEEAM_USERNAME:-veeam-monitor}
+      - VEEAM_PASSWORD=${VEEAM_PASSWORD:-changeme}
+    ports: ["9107:9107"]
+    networks: [exporters]
+    restart: unless-stopped
+
   # ===================== shared observability =====================
   prometheus:
     image: prom/prometheus:latest

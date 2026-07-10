@@ -1,0 +1,21 @@
+---
+# veeam_licenses_exporter — Veeam Backup Enterprise Manager license exporter.
+# Requires Veeam Backup Enterprise Manager (:9398) — standalone VBR has no license REST API.
+# Secret-bearing fields accept ${ENV_VAR} refs, expanded at load. Real values come from
+# .env (VEEAM_EM_HOST, VEEAM_USERNAME, VEEAM_PASSWORD); config.yaml stays the source of truth.
+
+collection:
+  interval: 2h            # how often to poll Enterprise Manager /api/licensing
+
+otlp:
+  endpoint: ""            # empty disables OTLP; e.g. "otel-collector:4317"
+  insecure: false
+
+veeam:
+  enabled: true
+  servers:
+    - instance: primary
+      host: ${VEEAM_EM_HOST}       # e.g. https://em.example.com:9398
+      username: ${VEEAM_USERNAME}
+      password: ${VEEAM_PASSWORD}
+      insecureSkipVerify: true
