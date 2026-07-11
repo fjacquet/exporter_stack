@@ -39,7 +39,11 @@ Tear down with `docker compose down`.
 | vmware | `vmware_licenses_exporter` | 9106 | VMware vSphere licenses |
 | m365   | `m365_licenses_exporter`   | 9105 | Microsoft 365 licenses |
 | veeam  | `veeam_licenses_exporter`  | 9107 | Veeam Backup Enterprise Manager licenses |
-| node   | `node_exporter`   | 9100 | Linux/host metrics (live) |
+| node   | `quay.io/prometheus/node-exporter` | 9100 | Linux/host metrics (live) |
+
+Fred's own exporters (idrac…veeam above) use the `ghcr.io/fjacquet/…` shorthand in the Image
+column. Community/third-party exporters (node above, and more to come) pull from their own
+upstream registries, so their Image column shows the full image reference verbatim instead.
 
 ## Configuring real targets
 
