@@ -1,7 +1,7 @@
 ---
 # veeam_licenses_exporter — Veeam Backup Enterprise Manager license exporter.
 # Requires Veeam Backup Enterprise Manager (:9398) — standalone VBR has no license REST API.
-# Secret-bearing fields accept ${ENV_VAR} refs, expanded at load. Real values come from
+# Secret-bearing fields accept <ENV_VAR> refs, expanded at load. Real values come from
 # .env (VEEAM_EM_HOST, VEEAM_USERNAME, VEEAM_PASSWORD); config.yaml stays the source of truth.
 
 collection:
