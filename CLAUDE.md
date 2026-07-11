@@ -73,8 +73,10 @@ docker compose up -d --force-recreate dashboard-fetcher grafana   # re-fetch das
   show `up=0`.
 - **Fail-fast / restart-loopers** (`Restarting` in `docker compose ps` without real
   creds/backends): **kafka, stackdriver, azure, gluster** always, **ceph** intermittently
-  (librados connect timeout) — plus the pre-existing **vmware/m365/veeam licenses** trio.
-  Documented, not a stack bug; set real values in `.env` to settle them.
+  (librados connect timeout). Documented, not a stack bug; set real values in `.env` to
+  settle them. (The vmware/m365/veeam licensing exporters used to be here too — they
+  fatal-looped on a literal `${ENV_VAR}` in their config *comment*; fixed to `<ENV_VAR>`
+  per the nsr convention, so they now boot `up=1` with `license_up 0`.)
 - **azure_exporter** (webdevops) validates creds at startup and fatal-exits with placeholder
   values — it does NOT serve self-metrics until real Azure creds are set.
 - **Community image quirks**: `percona/mongodb_exporter` has **no `:latest`** (pinned
@@ -93,8 +95,9 @@ docker compose up -d --force-recreate dashboard-fetcher grafana   # re-fetch das
   + a doc note; its dashboard (gcom 14694) is still fetched.
 - **Alerting demo**: `rules/alerts.yml` → Prometheus (`rule_files`) → **alertmanager**
   (`:9093`) → **webhook-logger** (`docker compose logs webhook-logger`). Rules: `Heartbeat`
-  (always), `BackendDown` (db exporters' `*_up==0`), `ExporterDown` (restart-loopers +
-  idrac/nbu), `NodeHighLoad` (example). See `docs/alertmanager.md`.
+  (always), `BackendDown` (db exporters' `*_up==0` + licensing `license_up==0`),
+  `ExporterDown` (scoped `up==0` for the restart-loopers + idrac/nbu), `NodeHighLoad`
+  (example). See `docs/alertmanager.md`.
 - **New ports**: node 9100, mysqld 9104, haproxy 9101, apache 9117, nginx 9113, redis 9121,
   postgres 9187, mongodb 9216, kafka 9308, rabbitmq 9419, ceph 9128, radosgw 9242,
   gluster 9713, stackdriver 9255, azure 8080, mssql 4000, alertmanager 9093,
