@@ -113,6 +113,15 @@ With placeholder credentials and unreachable example hosts:
 
 This is expected. Point `configs/` and `.env` at real, reachable targets to get live data.
 
+## Alerting
+
+Prometheus rules (`rules/alerts.yml`) feed **Alertmanager** (`:9093`), which routes firing
+alerts to a webhook-logger receiver so you can see the exact notification payload. See
+[docs/alertmanager.md](docs/alertmanager.md) for what fires and why.
+
+- Alertmanager UI: http://localhost:9093
+- Delivered notifications: `docker compose logs -f webhook-logger`
+
 ## How dashboards stay evergreen
 
 On every `up`, the one-shot `dashboard-fetcher` reads `dashboards.manifest.txt` and downloads

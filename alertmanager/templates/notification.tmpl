@@ -1,0 +1,12 @@
+{{ define "email.subject" }}[{{ .Status | toUpper }}] {{ .CommonLabels.alertname }} ({{ .Alerts | len }} alert(s)){{ end }}
+
+{{ define "email.body" }}
+<h2>{{ .CommonLabels.alertname }}</h2>
+<p>Status: <b>{{ .Status }}</b></p>
+{{ range .Alerts }}
+<hr>
+<p><b>{{ .Annotations.summary }}</b></p>
+<p>{{ .Annotations.description }}</p>
+<p>Labels: {{ range .Labels.SortedPairs }}{{ .Name }}={{ .Value }} {{ end }}</p>
+{{ end }}
+{{ end }}
