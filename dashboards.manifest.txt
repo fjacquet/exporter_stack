@@ -14,3 +14,4 @@ pve      fjacquet/pve_exporter     default  grafana/dashboards/
 vmware   fjacquet/vmware_licenses_exporter  default  grafana/dashboards/
 m365     fjacquet/m365_licenses_exporter    default  grafana/dashboards/
 veeam    fjacquet/veeam_licenses_exporter   default  grafana/dashboards/
+node     -  default  gcom:1860

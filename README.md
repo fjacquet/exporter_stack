@@ -39,6 +39,7 @@ Tear down with `docker compose down`.
 | vmware | `vmware_licenses_exporter` | 9106 | VMware vSphere licenses |
 | m365   | `m365_licenses_exporter`   | 9105 | Microsoft 365 licenses |
 | veeam  | `veeam_licenses_exporter`  | 9107 | Veeam Backup Enterprise Manager licenses |
+| node   | `node_exporter`   | 9100 | Linux/host metrics (live) |
 
 ## Configuring real targets
 
