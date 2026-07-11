@@ -25,4 +25,5 @@ apache   -  default  gcom:3894
 haproxy  -  default  gcom:367
 rabbitmq -  default  gcom:4279
 kafka    -  default  gcom:7589
+ceph     -  default  gcom:917
 # azure, radosgw: no canonical grafana.com dashboard — omitted this batch (follow-up).

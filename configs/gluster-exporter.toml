@@ -1,0 +1,3 @@
+[globals]
+port = 9713
+metrics-path = "/metrics"

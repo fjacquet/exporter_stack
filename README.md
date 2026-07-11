@@ -52,11 +52,20 @@ Tear down with `docker compose down`.
 | kafka | `danielqsj/kafka-exporter` | 9308 | Kafka (fatal-exits on unreachable broker; container restart-loops) |
 | stackdriver | `quay.io/prometheuscommunity/stackdriver-exporter` | 9255 | GCP Cloud Monitoring (fails fast/restart-loops on placeholder creds — needs valid Application Default Credentials) |
 | azure | `quay.io/webdevops/azure-metrics-exporter` | 8080 | Azure Monitor probe exporter (fails fast/restart-loops on placeholder creds — needs a real tenant/client/secret; with valid creds `/metrics` serves exporter self-metrics only, real Azure metrics need probe-style scrape config, out of scope here) |
+| ceph | `digitalocean/ceph_exporter` | 9128 | Ceph cluster (librados) — fatal-exits and restart-loops on an unreachable mon (`error connecting to rados: timeout`, ~30s); target flaps `down`/connection-refused between restarts. amd64-only image, pinned `platform: linux/amd64` |
+| radosgw | `ghcr.io/pando85/radosgw_usage_exporter` | 9242 | Ceph RADOS Gateway usage — starts and serves `/metrics` even with placeholder creds, target `up 1` (self-metrics only; real usage stats need a reachable radosgw) |
+| gluster | `kurzdigital/gluster-prometheus` (substituted — see note below) | 9713 | GlusterFS — needs a local `glusterd`; restart-loops without one. Legacy entry (Task 12) |
 
 Fred's own exporters (idrac…veeam above) use the `ghcr.io/fjacquet/…` shorthand in the Image
 column. Community/third-party exporters (node, postgres, mysqld, mongodb, mssql, redis above,
 and more to come) pull from their own upstream registries, so their Image column shows the
 full image reference verbatim instead.
+
+**Image substitution — gluster:** `gluster/gluster-prometheus:latest` is not published on
+Docker Hub (`denied: requested access to the resource is denied`). Substituted
+`kurzdigital/gluster-prometheus:latest`, an amd64-only community build of the same
+upstream `gluster/gluster-prometheus` source (last pushed 2018). Its default `CMD` is a bare
+`/bin/sh`, so `docker-compose.yml` sets `command: ["/gluster-exporter"]` explicitly.
 
 ## Configuring real targets
 
@@ -85,6 +94,17 @@ With placeholder credentials and unreachable example hosts:
   `DefaultAzureCredential: failed to acquire a token`. Their Prometheus targets stay `down`
   (`up 0`) until `GOOGLE_APPLICATION_CREDENTIALS`/`GCP_PROJECT_ID` and
   `AZURE_TENANT_ID`/`AZURE_CLIENT_ID`/`AZURE_CLIENT_SECRET` point at real, valid credentials.
+- **ceph** fatally exits (`unable to create rados connection for cluster ... timeout`,
+  ~30s) and restart-loops against the placeholder `mon_host` in `configs/ceph.conf`, so its
+  target flaps between `down`/`connection refused` — set a real `mon_host` and keyring for
+  live data.
+- **radosgw** starts and answers `/metrics` even with placeholder creds — its target reports
+  `up 1`, but the exposed series are self-metrics only until `RADOSGW_SERVER`/
+  `RADOSGW_ACCESS_KEY`/`RADOSGW_SECRET_KEY` point at a real gateway.
+- **gluster** requires a local `glusterd` peer; without one it restart-loops (observed
+  locally as a Rosetta/amd64-emulation crash on Apple Silicon — on a genuine amd64 Linux
+  host it would instead fail to connect to glusterd). Documented as a legacy/best-effort
+  entry (Task 12).
 
 This is expected. Point `configs/` and `.env` at real, reachable targets to get live data.
 

@@ -361,6 +361,45 @@ services:
     networks: [exporters]
     restart: unless-stopped
 
+  ceph_exporter:
+    # amd64-only image — platform pin required on arm64 hosts (e.g. Apple Silicon).
+    image: digitalocean/ceph_exporter:${CEPH_TAG:-latest}
+    platform: linux/amd64
+    container_name: es_ceph_exporter
+    volumes:
+      - ./configs/ceph.conf:/etc/ceph/ceph.conf:ro
+      - ./configs/ceph.keyring:/etc/ceph/keyring:ro
+    ports: ["9128:9128"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  radosgw_exporter:
+    image: ghcr.io/pando85/radosgw_usage_exporter:${RADOSGW_TAG:-latest}
+    container_name: es_radosgw_exporter
+    environment:
+      - RADOSGW_SERVER=${RADOSGW_SERVER:-http://radosgw.example.com:7480}
+      - ACCESS_KEY=${RADOSGW_ACCESS_KEY:-changeme}
+      - SECRET_KEY=${RADOSGW_SECRET_KEY:-changeme}
+    ports: ["9242:9242"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  gluster_exporter:
+    # gluster/gluster-prometheus:latest is not published on Docker Hub (denied/unauthorized);
+    # substituted the community mirror kurzdigital/gluster-prometheus (same upstream source).
+    # amd64-only image (built 2018) — platform pin required on arm64 hosts (e.g. Apple Silicon).
+    image: kurzdigital/gluster-prometheus:${GLUSTER_TAG:-latest}
+    platform: linux/amd64
+    container_name: es_gluster_exporter
+    # image's default CMD is a bare /bin/sh (exits immediately) — the exporter binary
+    # must be invoked explicitly.
+    command: ["/gluster-exporter"]
+    volumes:
+      - ./configs/gluster-exporter.toml:/etc/gluster-prometheus/gluster-exporter.toml:ro
+    ports: ["9713:9713"]
+    networks: [exporters]
+    restart: unless-stopped
+
   # ===================== shared observability =====================
   prometheus:
     image: prom/prometheus:latest

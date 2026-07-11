@@ -58,3 +58,9 @@ scrape_configs:
     static_configs: [{ targets: ['stackdriver_exporter:9255'] }]
   - job_name: azure_exporter
     static_configs: [{ targets: ['azure_exporter:8080'] }]
+  - job_name: ceph_exporter
+    static_configs: [{ targets: ['ceph_exporter:9128'] }]
+  - job_name: radosgw_exporter
+    static_configs: [{ targets: ['radosgw_exporter:9242'] }]
+  - job_name: gluster_exporter
+    static_configs: [{ targets: ['gluster_exporter:9713'] }]
