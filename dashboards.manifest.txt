@@ -15,3 +15,8 @@ vmware   fjacquet/vmware_licenses_exporter  default  grafana/dashboards/
 m365     fjacquet/m365_licenses_exporter    default  grafana/dashboards/
 veeam    fjacquet/veeam_licenses_exporter   default  grafana/dashboards/
 node     -  default  gcom:1860
+postgres -  default  gcom:9628
+mysqld   -  default  gcom:7362
+mongodb  -  default  gcom:20867
+mssql    -  default  gcom:9336
+redis    -  default  gcom:763

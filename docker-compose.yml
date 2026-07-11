@@ -236,6 +236,60 @@ services:
     networks: [exporters]
     restart: unless-stopped
 
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:${POSTGRES_TAG:-latest}
+    container_name: es_postgres_exporter
+    environment:
+      - DATA_SOURCE_NAME=${POSTGRES_DSN:-postgresql://postgres:changeme@postgres.example.com:5432/postgres?sslmode=disable}
+    ports: ["9187:9187"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  mysqld_exporter:
+    image: quay.io/prometheus/mysqld-exporter:${MYSQLD_TAG:-latest}
+    container_name: es_mysqld_exporter
+    command:
+      - '--config.my-cnf=/etc/mysqld_exporter/.my.cnf'
+      - '--mysqld.address=${MYSQL_ADDRESS:-mysql.example.com:3306}'
+    volumes:
+      - ./configs/mysqld.cnf:/etc/mysqld_exporter/.my.cnf:ro
+    ports: ["9104:9104"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  mongodb_exporter:
+    image: percona/mongodb_exporter:${MONGODB_TAG:-0.51.0}
+    container_name: es_mongodb_exporter
+    command:
+      - '--mongodb.uri=${MONGODB_URI:-mongodb://exporter:changeme@mongodb.example.com:27017}'
+      - '--collect-all'
+    ports: ["9216:9216"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  mssql_exporter:
+    image: awaragi/prometheus-mssql-exporter:${MSSQL_TAG:-latest}
+    container_name: es_mssql_exporter
+    environment:
+      - SERVER=${MSSQL_SERVER:-mssql.example.com}
+      - PORT=${MSSQL_PORT:-1433}
+      - USERNAME=${MSSQL_USERNAME:-sa}
+      - PASSWORD=${MSSQL_PASSWORD:-changeme}
+      - EXPOSE=4000
+    ports: ["4000:4000"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  redis_exporter:
+    image: oliver006/redis_exporter:${REDIS_TAG:-latest}
+    container_name: es_redis_exporter
+    environment:
+      - REDIS_ADDR=${REDIS_ADDR:-redis://redis.example.com:6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-changeme}
+    ports: ["9121:9121"]
+    networks: [exporters]
+    restart: unless-stopped
+
   # ===================== shared observability =====================
   prometheus:
     image: prom/prometheus:latest
