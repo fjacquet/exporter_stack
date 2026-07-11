@@ -1,0 +1,56 @@
+groups:
+  - name: exporter-availability
+    rules:
+      - alert: ExporterDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Exporter target {{ $labels.job }} is down"
+          description: >-
+            {{ $labels.instance }} (job {{ $labels.job }}) has failed to scrape
+            for over 1 minute (up == 0). In this demo it fires for exporters that
+            fatal-exit / restart-loop without a real backend (kafka, stackdriver,
+            azure, ceph, gluster) and for collect-on-demand exporters (idrac, nbu).
+            Exporters that serve /metrics regardless stay up=1 — see BackendDown.
+
+  - name: backend-availability
+    rules:
+      - alert: BackendDown
+        expr: pg_up == 0 or mysql_up == 0 or redis_up == 0 or mongodb_up == 0 or mssql_up == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Exporter {{ $labels.job }} cannot reach its backend"
+          description: >-
+            {{ $labels.job }} scrapes fine (up == 1) but its internal health gauge
+            reports the monitored backend unreachable. In this demo the database
+            exporters report their *_up gauge = 0 because they point at fictional
+            targets. Fires on startup by design.
+
+  - name: demo-heartbeat
+    rules:
+      - alert: Heartbeat
+        expr: vector(1)
+        labels:
+          severity: none
+        annotations:
+          summary: "Alerting pipeline heartbeat"
+          description: >-
+            Always-firing dead-man's-switch. If this alert is NOT visible in
+            Alertmanager, the Prometheus -> Alertmanager path is broken.
+
+  - name: node-examples
+    rules:
+      - alert: NodeHighLoad
+        expr: node_load1 > 100
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High 1m load on {{ $labels.instance }}"
+          description: >-
+            Example threshold rule (will not fire in this demo). Shows the normal
+            metric-based alerting pattern against node_exporter.

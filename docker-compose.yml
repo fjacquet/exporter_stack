@@ -406,6 +406,7 @@ services:
     container_name: es_prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./rules:/etc/prometheus/rules:ro
     ports: ["9090:9090"]
     networks: [exporters]
     restart: unless-stopped
