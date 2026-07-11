@@ -45,6 +45,9 @@ Tear down with `docker compose down`.
 | mongodb | `percona/mongodb_exporter` | 9216 | MongoDB (idle — `mongodb_up 0`) |
 | mssql | `awaragi/prometheus-mssql-exporter` | 4000 | Microsoft SQL Server (idle — `mssql_up 0`) |
 | redis | `oliver006/redis_exporter` | 9121 | Redis (idle — `redis_up 0`) |
+| nginx | `nginx/nginx-prometheus-exporter` | 9113 | nginx (idle — no backend) |
+| apache | `quay.io/lusitaniae/apache-exporter` | 9117 | Apache HTTP Server (idle — no backend) |
+| haproxy | `quay.io/prometheus/haproxy-exporter` | 9101 | HAProxy (idle — no backend) |
 
 Fred's own exporters (idrac…veeam above) use the `ghcr.io/fjacquet/…` shorthand in the Image
 column. Community/third-party exporters (node, postgres, mysqld, mongodb, mssql, redis above,

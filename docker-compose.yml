@@ -291,6 +291,33 @@ services:
     networks: [exporters]
     restart: unless-stopped
 
+  nginx_exporter:
+    image: nginx/nginx-prometheus-exporter:${NGINX_TAG:-latest}
+    container_name: es_nginx_exporter
+    command:
+      - '--nginx.scrape-uri=${NGINX_SCRAPE_URI:-http://nginx.example.com:8080/stub_status}'
+    ports: ["9113:9113"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  apache_exporter:
+    image: quay.io/lusitaniae/apache-exporter:${APACHE_TAG:-latest}
+    container_name: es_apache_exporter
+    command:
+      - '--scrape_uri=${APACHE_SCRAPE_URI:-http://apache.example.com/server-status?auto}'
+    ports: ["9117:9117"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  haproxy_exporter:
+    image: quay.io/prometheus/haproxy-exporter:${HAPROXY_TAG:-latest}
+    container_name: es_haproxy_exporter
+    command:
+      - '--haproxy.scrape-uri=${HAPROXY_SCRAPE_URI:-http://haproxy.example.com:8404/haproxy?stats;csv}'
+    ports: ["9101:9101"]
+    networks: [exporters]
+    restart: unless-stopped
+
   # ===================== shared observability =====================
   prometheus:
     image: prom/prometheus:latest

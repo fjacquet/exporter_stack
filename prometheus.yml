@@ -44,3 +44,9 @@ scrape_configs:
     static_configs: [{ targets: ['mssql_exporter:4000'] }]
   - job_name: redis_exporter
     static_configs: [{ targets: ['redis_exporter:9121'] }]
+  - job_name: nginx_exporter
+    static_configs: [{ targets: ['nginx_exporter:9113'] }]
+  - job_name: apache_exporter
+    static_configs: [{ targets: ['apache_exporter:9117'] }]
+  - job_name: haproxy_exporter
+    static_configs: [{ targets: ['haproxy_exporter:9101'] }]

@@ -20,3 +20,6 @@ mysqld   -  default  gcom:7362
 mongodb  -  default  gcom:20867
 mssql    -  default  gcom:9336
 redis    -  default  gcom:763
+nginx    -  default  gcom:12708
+apache   -  default  gcom:3894
+haproxy  -  default  gcom:367
