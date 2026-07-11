@@ -66,7 +66,10 @@ rm -rf "${OUT:?}/"* 2>/dev/null || true
 while read -r name repo ref paths || [ -n "${name:-}" ]; do
   case "$name" in ""|\#*) continue ;; esac
   [ "$GLOBAL_REF" != "default" ] && ref="$GLOBAL_REF"
-  rref=$(resolve_ref "$repo" "$ref")
+  case "$repo" in
+    -) rref="-" ;;
+    *) rref=$(resolve_ref "$repo" "$ref") ;;
+  esac
   dest="$OUT/$name"; mkdir -p "$dest"
   for path in $paths; do
     case "$path" in

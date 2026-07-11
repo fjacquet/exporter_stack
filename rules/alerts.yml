@@ -12,7 +12,8 @@ groups:
             {{ $labels.instance }} (job {{ $labels.job }}) has failed to scrape
             for over 1 minute (up == 0). In this demo it fires for exporters that
             fatal-exit / restart-loop without a real backend (kafka, stackdriver,
-            azure, ceph, gluster) and for collect-on-demand exporters (idrac, nbu).
+            azure, ceph, gluster, and the licensing exporters vmware/m365/veeam) and
+            for collect-on-demand exporters (idrac, nbu).
             Exporters that serve /metrics regardless stay up=1 — see BackendDown.
 
   - name: backend-availability
