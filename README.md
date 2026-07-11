@@ -50,6 +50,8 @@ Tear down with `docker compose down`.
 | haproxy | `quay.io/prometheus/haproxy-exporter` | 9101 | HAProxy (idle — no backend) |
 | rabbitmq | `kbudde/rabbitmq-exporter` | 9419 | RabbitMQ (idle — no backend) |
 | kafka | `danielqsj/kafka-exporter` | 9308 | Kafka (fatal-exits on unreachable broker; container restart-loops) |
+| stackdriver | `quay.io/prometheuscommunity/stackdriver-exporter` | 9255 | GCP Cloud Monitoring (fails fast/restart-loops on placeholder creds — needs valid Application Default Credentials) |
+| azure | `quay.io/webdevops/azure-metrics-exporter` | 8080 | Azure Monitor probe exporter (fails fast/restart-loops on placeholder creds — needs a real tenant/client/secret; with valid creds `/metrics` serves exporter self-metrics only, real Azure metrics need probe-style scrape config, out of scope here) |
 
 Fred's own exporters (idrac…veeam above) use the `ghcr.io/fjacquet/…` shorthand in the Image
 column. Community/third-party exporters (node, postgres, mysqld, mongodb, mssql, redis above,
@@ -78,6 +80,11 @@ With placeholder credentials and unreachable example hosts:
 - **kafka** fatally exits (and restart-loops under `restart: unless-stopped`) if it cannot
   connect to a broker at startup, so its Prometheus target stays `down` until `KAFKA_SERVER`
   points at a reachable broker.
+- **stackdriver and azure** both fatally exit at startup (and restart-loop) if credentials
+  are missing/placeholder — stackdriver on "could not find default credentials", azure on
+  `DefaultAzureCredential: failed to acquire a token`. Their Prometheus targets stay `down`
+  (`up 0`) until `GOOGLE_APPLICATION_CREDENTIALS`/`GCP_PROJECT_ID` and
+  `AZURE_TENANT_ID`/`AZURE_CLIENT_ID`/`AZURE_CLIENT_SECRET` point at real, valid credentials.
 
 This is expected. Point `configs/` and `.env` at real, reachable targets to get live data.
 

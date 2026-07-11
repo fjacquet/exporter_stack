@@ -338,6 +338,29 @@ services:
     networks: [exporters]
     restart: unless-stopped
 
+  stackdriver_exporter:
+    image: quay.io/prometheuscommunity/stackdriver-exporter:${STACKDRIVER_TAG:-latest}
+    container_name: es_stackdriver_exporter
+    command:
+      - '--google.project-ids=${GCP_PROJECT_ID:-my-gcp-project}'
+      - '--monitoring.metrics-type-prefixes=compute.googleapis.com/instance/cpu'
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-}
+    ports: ["9255:9255"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  azure_exporter:
+    image: quay.io/webdevops/azure-metrics-exporter:${AZURE_TAG:-latest}
+    container_name: es_azure_exporter
+    environment:
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-00000000-0000-0000-0000-000000000000}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-00000000-0000-0000-0000-000000000000}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET:-changeme}
+    ports: ["8080:8080"]
+    networks: [exporters]
+    restart: unless-stopped
+
   # ===================== shared observability =====================
   prometheus:
     image: prom/prometheus:latest
