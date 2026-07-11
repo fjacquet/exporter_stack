@@ -64,3 +64,8 @@ scrape_configs:
     static_configs: [{ targets: ['radosgw_exporter:9242'] }]
   - job_name: gluster_exporter
     static_configs: [{ targets: ['gluster_exporter:9713'] }]
+
+  # Windows Exporter runs only on Windows hosts (no Linux container). Uncomment and
+  # point at your Windows host(s) running windows_exporter on :9182.
+  # - job_name: windows_exporter
+  #   static_configs: [{ targets: ['windows-host.example.com:9182'] }]

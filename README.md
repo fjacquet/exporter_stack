@@ -55,11 +55,16 @@ Tear down with `docker compose down`.
 | ceph | `digitalocean/ceph_exporter` | 9128 | Ceph cluster (librados) — fatal-exits and restart-loops on an unreachable mon (`error connecting to rados: timeout`, ~30s); target flaps `down`/connection-refused between restarts. amd64-only image, pinned `platform: linux/amd64` |
 | radosgw | `ghcr.io/pando85/radosgw_usage_exporter` | 9242 | Ceph RADOS Gateway usage — starts and serves `/metrics` even with placeholder creds, target `up 1` (self-metrics only; real usage stats need a reachable radosgw) |
 | gluster | `kurzdigital/gluster-prometheus` (substituted — see note below) | 9713 | GlusterFS — needs a local `glusterd`; restart-loops without one. Legacy entry (Task 12) |
+| windows | — (doc-only, Windows host) | 9182 | Windows Exporter — no Linux container, nothing runs in this stack |
 
 Fred's own exporters (idrac…veeam above) use the `ghcr.io/fjacquet/…` shorthand in the Image
 column. Community/third-party exporters (node, postgres, mysqld, mongodb, mssql, redis above,
 and more to come) pull from their own upstream registries, so their Image column shows the
 full image reference verbatim instead.
+
+Windows Exporter has no Linux container; its scrape job in `prometheus.yml` is commented —
+uncomment and point it at a Windows host running windows_exporter on :9182. Its Grafana
+dashboard is still provisioned.
 
 **Image substitution — gluster:** `gluster/gluster-prometheus:latest` is not published on
 Docker Hub (`denied: requested access to the resource is denied`). Substituted
