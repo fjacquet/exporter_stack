@@ -48,6 +48,8 @@ Tear down with `docker compose down`.
 | nginx | `nginx/nginx-prometheus-exporter` | 9113 | nginx (idle — no backend) |
 | apache | `quay.io/lusitaniae/apache-exporter` | 9117 | Apache HTTP Server (idle — no backend) |
 | haproxy | `quay.io/prometheus/haproxy-exporter` | 9101 | HAProxy (idle — no backend) |
+| rabbitmq | `kbudde/rabbitmq-exporter` | 9419 | RabbitMQ (idle — no backend) |
+| kafka | `danielqsj/kafka-exporter` | 9308 | Kafka (fatal-exits on unreachable broker; container restart-loops) |
 
 Fred's own exporters (idrac…veeam above) use the `ghcr.io/fjacquet/…` shorthand in the Image
 column. Community/third-party exporters (node, postgres, mysqld, mongodb, mssql, redis above,
@@ -73,6 +75,9 @@ With placeholder credentials and unreachable example hosts:
   `<exporter>_up 0` gauge.
 - **idrac and nbu** collect on demand — they query the backend during each scrape — so
   their Prometheus target stays `down` until they can reach a real BMC / NetBackup master.
+- **kafka** fatally exits (and restart-loops under `restart: unless-stopped`) if it cannot
+  connect to a broker at startup, so its Prometheus target stays `down` until `KAFKA_SERVER`
+  points at a reachable broker.
 
 This is expected. Point `configs/` and `.env` at real, reachable targets to get live data.
 

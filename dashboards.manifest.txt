@@ -23,3 +23,5 @@ redis    -  default  gcom:763
 nginx    -  default  gcom:12708
 apache   -  default  gcom:3894
 haproxy  -  default  gcom:367
+rabbitmq -  default  gcom:4279
+kafka    -  default  gcom:7589

@@ -50,3 +50,7 @@ scrape_configs:
     static_configs: [{ targets: ['apache_exporter:9117'] }]
   - job_name: haproxy_exporter
     static_configs: [{ targets: ['haproxy_exporter:9101'] }]
+  - job_name: rabbitmq_exporter
+    static_configs: [{ targets: ['rabbitmq_exporter:9419'] }]
+  - job_name: kafka_exporter
+    static_configs: [{ targets: ['kafka_exporter:9308'] }]

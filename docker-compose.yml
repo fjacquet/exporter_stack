@@ -318,6 +318,26 @@ services:
     networks: [exporters]
     restart: unless-stopped
 
+  rabbitmq_exporter:
+    image: kbudde/rabbitmq-exporter:${RABBITMQ_TAG:-latest}
+    container_name: es_rabbitmq_exporter
+    environment:
+      - RABBIT_URL=${RABBIT_URL:-http://rabbitmq.example.com:15672}
+      - RABBIT_USER=${RABBIT_USER:-monitoring}
+      - RABBIT_PASSWORD=${RABBIT_PASSWORD:-changeme}
+    ports: ["9419:9419"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  kafka_exporter:
+    image: danielqsj/kafka-exporter:${KAFKA_TAG:-latest}
+    container_name: es_kafka_exporter
+    command:
+      - '--kafka.server=${KAFKA_SERVER:-kafka.example.com:9092}'
+    ports: ["9308:9308"]
+    networks: [exporters]
+    restart: unless-stopped
+
   # ===================== shared observability =====================
   prometheus:
     image: prom/prometheus:latest
