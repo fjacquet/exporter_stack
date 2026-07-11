@@ -2,7 +2,7 @@ groups:
   - name: exporter-availability
     rules:
       - alert: ExporterDown
-        expr: up == 0
+        expr: up{job=~"idrac_exporter|nbu_exporter|kafka_exporter|stackdriver_exporter|azure_exporter|ceph_exporter|gluster_exporter|vmware_licenses_exporter|m365_licenses_exporter|veeam_licenses_exporter"} == 0
         for: 1m
         labels:
           severity: warning

@@ -2,7 +2,8 @@
 
 Prometheus evaluates the rules in `rules/alerts.yml` and hands firing alerts to
 **Alertmanager** (`:9093`), which groups, routes, and notifies. In this stack the
-receiver is a **webhook logger** so you can see the exact notification payload.
+receiver is a **webhook logger** (`:9095` on the host) so you can see the exact
+notification payload.
 
 ## What fires, and why
 
