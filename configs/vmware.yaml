@@ -1,6 +1,6 @@
 ---
 # vmware_licenses_exporter — VMware vSphere license exporter.
-# Secret-bearing fields accept <ENV_VAR> refs, expanded at load. Real values come
+# Secret-bearing fields accept ${ENV_VAR} refs, expanded at load. Real values come
 # from .env (VC_HOST, VC_USERNAME, VC_PASSWORD); config.yaml stays the source of truth.
 
 collection:

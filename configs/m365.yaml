@@ -1,6 +1,6 @@
 ---
 # m365_licenses_exporter — Microsoft 365 license exporter.
-# Secret-bearing fields accept <ENV_VAR> refs, expanded at load. Real values come
+# Secret-bearing fields accept ${ENV_VAR} refs, expanded at load. Real values come
 # from .env (M365_TENANT_ID, M365_CLIENT_ID, M365_CLIENT_SECRET); config.yaml stays
 # the source of truth.
 
