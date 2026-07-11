@@ -3,6 +3,8 @@
 **Date:** 2026-07-11
 **Status:** Approved (design), pending spec review
 
+> **Reconciled post-implementation** (image substitutions, up-semantics, `BackendDown` rule) — see CLAUDE.md gotchas.
+
 ## Goal
 
 Two related additions to the public demo stack, shipped together:
@@ -50,8 +52,8 @@ with existing stack ports (9090, 3000, 9093, 9105–9107, 9221, 9348, 9438–944
 | windows *(doc-only)* | — (no Linux image) | 9182 | commented scrape job → example external host | gcom `14694` |
 | mysqld | `quay.io/prometheus/mysqld-exporter` | 9104 | `configs/mysqld.cnf` (my.cnf) + `--config.my-cnf` + `--mysqld.address` | gcom `7362` |
 | postgres | `quay.io/prometheuscommunity/postgres-exporter` | 9187 | `DATA_SOURCE_NAME` env | gcom `9628` |
-| mongodb | `percona/mongodb_exporter` | 9216 | `--mongodb.uri` flag | gcom `20867` |
-| apache | `quay.io/prometheuscommunity/apache-exporter` | 9117 | `--scrape_uri` flag | gcom `3894` |
+| mongodb | `percona/mongodb_exporter:0.51.0` (no `:latest` tag) | 9216 | `--mongodb.uri` flag | gcom `20867` |
+| apache | `quay.io/lusitaniae/apache-exporter` | 9117 | `--scrape_uri` flag | gcom `3894` |
 | nginx | `nginx/nginx-prometheus-exporter` | 9113 | `--nginx.scrape-uri` flag | gcom `12708` |
 | rabbitmq | `kbudde/rabbitmq-exporter` | 9419 | `RABBIT_URL` env + `RABBIT_USER`/`RABBIT_PASSWORD` | gcom `4279` |
 | kafka | `danielqsj/kafka-exporter` | 9308 | `--kafka.server` flag | gcom `7589` |
@@ -60,9 +62,9 @@ with existing stack ports (9090, 3000, 9093, 9105–9107, 9221, 9348, 9438–944
 | haproxy | `quay.io/prometheus/haproxy-exporter` | 9101 | `--haproxy.scrape-uri` flag (`;csv` suffix required) | gcom `367` |
 | redis | `oliver006/redis_exporter` | 9121 | `REDIS_ADDR` env + `REDIS_PASSWORD` | gcom `763` |
 | mssql | `awaragi/prometheus-mssql-exporter` | 4000 | `SERVER`/`USERNAME`/`PASSWORD`/`PORT` env | gcom `9336` |
-| ceph | `digitalocean/ceph_exporter` | 9128 | `configs/ceph.conf` + keyring at `/etc/ceph` (fictional) | gcom `917` |
+| ceph | `digitalocean/ceph_exporter` (amd64-only — `platform: linux/amd64` pin) | 9128 | `configs/ceph.conf` + keyring at `/etc/ceph` (fictional) | gcom `917` |
 | radosgw | `ghcr.io/pando85/radosgw_usage_exporter` | 9242 | `RADOSGW_SERVER`/`ACCESS_KEY`/`SECRET_KEY` env | none (see below) |
-| gluster | `gluster/gluster-prometheus` | 9713 | `configs/gluster-exporter.toml` (fictional peer) | gcom `8376` |
+| gluster | `kurzdigital/gluster-prometheus` (unofficial 2018 mirror; `gluster/gluster-prometheus` does not exist; amd64-only — `platform: linux/amd64` pin; needs `command: ["/gluster-exporter"]` override) | 9713 | `configs/gluster-exporter.toml` (fictional peer) | gcom `8376` |
 
 **Dashboards deliberately omitted this batch:** azure and radosgw have no canonical
 grafana.com dashboard (their upstream repos ship their own JSON). They join as exporters
@@ -116,6 +118,9 @@ only if nothing fetched" exit rule are all preserved. The provisioned datasource
 - Service names `<exporter>_exporter`; container names `es_<name>` (existing `es_` prefix).
 - Same `exporters` bridge network; `restart: unless-stopped`; image tag overridable via
   `${<NAME>_TAG:-latest}`. Host port == container default port (matches upstream docs).
+- **Platform pin:** `ceph` and `gluster` images are amd64-only (no arm64 build published) — both
+  carry `platform: linux/amd64` in `docker-compose.yml` so they still run (via emulation) on
+  arm64 hosts such as Apple Silicon.
 
 ### Prometheus scrape config
 
@@ -152,12 +157,21 @@ One `job_name` per new exporter targeting `<service>:<port>` — same pattern as
   `group_by`, `group_wait`, `group_interval`, `repeat_interval` set to visible demo values so
   grouping/repeat behaviour is observable; `send_resolved: true`. Plus a **commented** email
   receiver referencing the example template, as the "here's where templates go" reference.
-- **`rules/alerts.yml`** (mounted into Prometheus at `/etc/prometheus/rules/`):
-  - `ExporterDown` — `up == 0` for `1m`, `severity: warning`; **fires on startup** for every
-    idle exporter. Annotations explain the demo context.
-  - `Heartbeat` — an always-firing alert (e.g. `vector(1)`), teaching the dead-man's-switch
+- **`rules/alerts.yml`** (mounted into Prometheus at `/etc/prometheus/rules/`), **four rules**:
+  - `Heartbeat` — an always-firing alert (`vector(1)`), teaching the dead-man's-switch
     pattern (absence of this alert means the pipeline is broken).
-  - one non-firing node example (e.g. `node_load1 > 100` for `5m`) showing the normal pattern.
+  - `BackendDown` — `pg_up == 0 or mysql_up == 0 or redis_up == 0 or mongodb_up == 0 or
+    mssql_up == 0`, for `1m`, `severity: warning`; fires when an exporter scrapes fine
+    (`up == 1`) but its internal health gauge reports the monitored backend unreachable
+    (the database exporters point at fictional targets).
+  - `ExporterDown` — scoped to the exporters that fatal-exit / restart-loop without a real
+    backend rather than serving `up=0`: `up{job=~"idrac_exporter|nbu_exporter|kafka_exporter|
+    stackdriver_exporter|azure_exporter|ceph_exporter|gluster_exporter|
+    vmware_licenses_exporter|m365_licenses_exporter|veeam_licenses_exporter"} == 0`, for `1m`,
+    `severity: warning`. Exporters that serve `/metrics` regardless stay `up=1` and are covered
+    by `BackendDown` instead.
+  - `NodeHighLoad` — one non-firing node example (`node_load1 > 100` for `5m`) showing the
+    normal metric-based alerting pattern.
 - **`alertmanager/templates/notification.tmpl`** — example notification template used by the
   commented email receiver (reference/teaching).
 
@@ -208,8 +222,14 @@ prometheus service; README alerting section; `ALERTMANAGER_TAG` in `.env.example
 - **MySQL `DATA_SOURCE_NAME` is gone** (removed v0.15.0) — must use `--config.my-cnf` +
   `--mysqld.address`. This is why mysqld is a config-file exporter.
 - **HAProxy scrape URI** must end in `;csv`.
-- **Gluster is legacy** (`gluster/gluster-prometheus` low-activity; RHGS EOL; Proxmox 9 dropped
-  GlusterFS). Included as a legacy catalog entry.
+- **Gluster is legacy** (RHGS EOL; Proxmox 9 dropped GlusterFS) and `gluster/gluster-prometheus`
+  does not exist as a published image — the stack substitutes the unofficial, low-activity
+  `kurzdigital/gluster-prometheus` mirror (amd64-only; needs a `command` override since the
+  image's default `CMD` is a bare `/bin/sh`). Included as a legacy catalog entry.
+- **Apache exporter image dead/unauthorized:** `quay.io/prometheuscommunity/apache-exporter` is
+  not pullable — substituted `quay.io/lusitaniae/apache-exporter`.
+- **MongoDB exporter has no `:latest` tag:** `percona/mongodb_exporter` publishes no `:latest`;
+  the stack pins `${MONGODB_TAG:-0.51.0}`.
 - **grafana.com API shape** for latest-revision download to be confirmed against a live call at
   implementation.
 - **Alertmanager `repeat_interval`** kept short-ish for demo visibility, but not so short it spams

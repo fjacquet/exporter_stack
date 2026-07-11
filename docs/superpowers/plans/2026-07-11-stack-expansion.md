@@ -1,5 +1,7 @@
 # Stack Expansion Implementation Plan
 
+> **Reconciled post-implementation** (image substitutions, up-semantics, `BackendDown` rule) — see CLAUDE.md gotchas.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add 16 community Prometheus exporters (+ a document-only Windows stub) and a self-contained Alertmanager demo to the existing `exporter_stack` Docker Compose project.
@@ -244,7 +246,8 @@ password = changeme
     restart: unless-stopped
 
   mongodb_exporter:
-    image: percona/mongodb_exporter:${MONGODB_TAG:-latest}
+    # percona/mongodb_exporter has no :latest tag — pin a version
+    image: percona/mongodb_exporter:${MONGODB_TAG:-0.51.0}
     container_name: es_mongodb_exporter
     command:
       - '--mongodb.uri=${MONGODB_URI:-mongodb://exporter:changeme@mongodb.example.com:27017}'
@@ -302,7 +305,7 @@ mssql    -  default  gcom:9336
 redis    -  default  gcom:763
 ```
 
-- [ ] **Step 5: Add README rows and `.env.example` entries.** README table rows for each (name / target / port / `up=0`). `.env.example` "Image tags": `POSTGRES_TAG=latest`, `MYSQLD_TAG=latest`, `MONGODB_TAG=latest`, `MSSQL_TAG=latest`, `REDIS_TAG=latest`; a new "Community exporter targets (optional)" block with `POSTGRES_DSN=`, `MYSQL_ADDRESS=`, `MONGODB_URI=`, `MSSQL_SERVER=`, `MSSQL_USERNAME=`, `MSSQL_PASSWORD=`, `REDIS_ADDR=`, `REDIS_PASSWORD=` (blank values).
+- [ ] **Step 5: Add README rows and `.env.example` entries.** README table rows for each (name / target / port / `up=0`). `.env.example` "Image tags": `POSTGRES_TAG=latest`, `MYSQLD_TAG=latest`, `MONGODB_TAG=0.51.0` (no `:latest` tag), `MSSQL_TAG=latest`, `REDIS_TAG=latest`; a new "Community exporter targets (optional)" block with `POSTGRES_DSN=`, `MYSQL_ADDRESS=`, `MONGODB_URI=`, `MSSQL_SERVER=`, `MSSQL_USERNAME=`, `MSSQL_PASSWORD=`, `REDIS_ADDR=`, `REDIS_PASSWORD=` (blank values).
 
 - [ ] **Step 6: Validate and start the batch, checking for restart loops.**
 
@@ -356,7 +359,7 @@ git commit -m "feat: add database exporters (postgres, mysqld, mongodb, mssql, r
     restart: unless-stopped
 
   apache_exporter:
-    image: quay.io/prometheuscommunity/apache-exporter:${APACHE_TAG:-latest}
+    image: quay.io/lusitaniae/apache-exporter:${APACHE_TAG:-latest}
     container_name: es_apache_exporter
     command:
       - '--scrape_uri=${APACHE_SCRAPE_URI:-http://apache.example.com/server-status?auto}'
@@ -539,9 +542,10 @@ Note: azure (webdevops) uses a probe model — its `/metrics` serves exporter se
     static_configs: [{ targets: ['azure_exporter:8080'] }]
 ```
 
-- [ ] **Step 3: `dashboards.manifest.txt` — no rows.** azure and radosgw have no canonical grafana.com dashboard (spec: omitted this batch). Add a comment line documenting the omission:
+- [ ] **Step 3: `dashboards.manifest.txt` — add the stackdriver row; azure has no canonical grafana.com dashboard.** Add the stackdriver dashboard row plus a comment line documenting the azure/radosgw omission:
 
 ```
+stackdriver -  default  gcom:16572
 # azure, radosgw: no canonical grafana.com dashboard — omitted this batch (follow-up).
 ```
 
@@ -607,7 +611,9 @@ metrics-path = "/metrics"
 
 ```yaml
   ceph_exporter:
+    # amd64-only image — platform pin required on arm64 hosts (e.g. Apple Silicon).
     image: digitalocean/ceph_exporter:${CEPH_TAG:-latest}
+    platform: linux/amd64
     container_name: es_ceph_exporter
     volumes:
       - ./configs/ceph.conf:/etc/ceph/ceph.conf:ro
@@ -628,8 +634,15 @@ metrics-path = "/metrics"
     restart: unless-stopped
 
   gluster_exporter:
-    image: gluster/gluster-prometheus:${GLUSTER_TAG:-latest}
+    # gluster/gluster-prometheus:latest is not published on Docker Hub (denied/unauthorized);
+    # substituted the community mirror kurzdigital/gluster-prometheus (same upstream source).
+    # amd64-only image (built 2018) — platform pin required on arm64 hosts (e.g. Apple Silicon).
+    image: kurzdigital/gluster-prometheus:${GLUSTER_TAG:-latest}
+    platform: linux/amd64
     container_name: es_gluster_exporter
+    # image's default CMD is a bare /bin/sh (exits immediately) — the exporter binary
+    # must be invoked explicitly.
+    command: ["/gluster-exporter"]
     volumes:
       - ./configs/gluster-exporter.toml:/etc/gluster-prometheus/gluster-exporter.toml:ro
     ports: ["9713:9713"]
@@ -648,10 +661,11 @@ metrics-path = "/metrics"
     static_configs: [{ targets: ['gluster_exporter:9713'] }]
 ```
 
-- [ ] **Step 4: Add the ceph dashboard row to `dashboards.manifest.txt`** (radosgw omitted per Task 6):
+- [ ] **Step 4: Add the ceph and gluster dashboard rows to `dashboards.manifest.txt`** (radosgw omitted per Task 6):
 
 ```
 ceph     -  default  gcom:917
+gluster  -  default  gcom:8376
 ```
 
 - [ ] **Step 5: Add README rows and `.env.example` entries.** Tags: `CEPH_TAG=latest`, `RADOSGW_TAG=latest`, `GLUSTER_TAG=latest`. Targets: `RADOSGW_SERVER=`, `RADOSGW_ACCESS_KEY=`, `RADOSGW_SECRET_KEY=`. README notes: ceph target may show `down` (like idrac); gluster is legacy and may not start without glusterd.
@@ -730,7 +744,7 @@ git commit -m "docs: add document-only Windows exporter stub + dashboard"
 - Modify: `prometheus.yml`, `docker-compose.yml`
 
 **Interfaces:**
-- Produces: alert rules `ExporterDown`, `Heartbeat`, `NodeHighLoad` loaded by Prometheus; `rules` mounted at `/etc/prometheus/rules`.
+- Produces: alert rules `Heartbeat`, `BackendDown`, `ExporterDown`, `NodeHighLoad` loaded by Prometheus; `rules` mounted at `/etc/prometheus/rules`.
 
 - [ ] **Step 1: Create `rules/alerts.yml`:**
 
@@ -739,16 +753,34 @@ groups:
   - name: exporter-availability
     rules:
       - alert: ExporterDown
-        expr: up == 0
+        expr: up{job=~"idrac_exporter|nbu_exporter|kafka_exporter|stackdriver_exporter|azure_exporter|ceph_exporter|gluster_exporter|vmware_licenses_exporter|m365_licenses_exporter|veeam_licenses_exporter"} == 0
         for: 1m
         labels:
           severity: warning
         annotations:
           summary: "Exporter {{ $labels.job }} is down"
           description: >-
-            {{ $labels.instance }} (job {{ $labels.job }}) has been unreachable
-            for over 1 minute (up == 0). In this demo, exporters without real
-            credentials report up=0, so this fires on startup by design.
+            {{ $labels.instance }} (job {{ $labels.job }}) has failed to scrape
+            for over 1 minute (up == 0). In this demo it fires for exporters that
+            fatal-exit / restart-loop without a real backend (kafka, stackdriver,
+            azure, ceph, gluster, and the licensing exporters vmware/m365/veeam) and
+            for collect-on-demand exporters (idrac, nbu).
+            Exporters that serve /metrics regardless stay up=1 — see BackendDown.
+
+  - name: backend-availability
+    rules:
+      - alert: BackendDown
+        expr: pg_up == 0 or mysql_up == 0 or redis_up == 0 or mongodb_up == 0 or mssql_up == 0
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Exporter {{ $labels.job }} cannot reach its backend"
+          description: >-
+            {{ $labels.job }} scrapes fine (up == 1) but its internal health gauge
+            reports the monitored backend unreachable. In this demo the database
+            exporters report their *_up gauge = 0 because they point at fictional
+            targets. Fires on startup by design.
 
   - name: demo-heartbeat
     rules:
@@ -799,7 +831,7 @@ docker compose up -d prometheus
 sleep 5
 docker compose exec -T prometheus promtool check rules /etc/prometheus/rules/alerts.yml
 ```
-Expected: `SUCCESS: 3 rules found`.
+Expected: `SUCCESS: 4 rules found`.
 
 - [ ] **Step 5: Verify Prometheus loaded and is firing the rules.**
 
@@ -810,7 +842,7 @@ sleep 75
 curl -s http://localhost:9090/api/v1/rules | jq -r '.data.groups[].rules[].name' | sort -u
 curl -s 'http://localhost:9090/api/v1/query?query=ALERTS{alertname="Heartbeat",alertstate="firing"}' | jq '.data.result | length'
 ```
-Expected: rule names include `ExporterDown`, `Heartbeat`, `NodeHighLoad`; the Heartbeat query returns `1`.
+Expected: rule names include `ExporterDown`, `BackendDown`, `Heartbeat`, `NodeHighLoad`; the Heartbeat query returns `1`.
 
 - [ ] **Step 6: Commit.**
 
@@ -977,8 +1009,14 @@ receiver is a **webhook logger** so you can see the exact notification payload.
 
 ## What fires, and why
 
-- `ExporterDown` (`up == 0`) — fires on startup for every idle exporter (they have
-  no real credentials), so the demo shows real firing alerts with no fake data.
+- `ExporterDown` (scoped `up == 0`) — fires on startup for the exporters that fatal-exit /
+  restart-loop without a real backend (kafka, stackdriver, azure, ceph, gluster, idrac, nbu,
+  and the licensing exporters vmware/m365/veeam), so the demo shows real firing alerts with
+  no fake data.
+- `BackendDown` (`pg_up == 0 or mysql_up == 0 or redis_up == 0 or mongodb_up == 0 or
+  mssql_up == 0`) — fires for exporters that scrape fine (`up == 1`) but whose internal
+  health gauge reports the monitored backend unreachable (the database exporters point at
+  fictional targets).
 - `Heartbeat` (`vector(1)`) — always-firing dead-man's-switch. If it's *absent* in
   Alertmanager, the Prometheus -> Alertmanager path is broken.
 - `NodeHighLoad` — example threshold rule; does not fire in the demo.
@@ -1078,10 +1116,17 @@ Expected: node `1`; several `up==0`; Alertmanager alert count `> 0`; webhook pay
   (`up=1`); real Azure metrics need probe-style scrape config (out of scope).
 - **ceph_exporter** connects via librados; target shows `down` (scrape timeout)
   without a reachable mon, like idrac.
-- **gluster_exporter** is a legacy entry (`gluster/gluster-prometheus`, low-activity).
+- **gluster_exporter** is a legacy entry; `gluster/gluster-prometheus` does not exist as a
+  published image — uses the unofficial, low-activity `kurzdigital/gluster-prometheus` mirror
+  (amd64-only, `platform: linux/amd64` pin, `command: ["/gluster-exporter"]` override).
+- **apache_exporter** substitutes `quay.io/lusitaniae/apache-exporter` — the
+  `quay.io/prometheuscommunity/apache-exporter` image is dead/unauthorized.
+- **mongodb_exporter** pins `${MONGODB_TAG:-0.51.0}` — `percona/mongodb_exporter` has no
+  `:latest` tag.
 - **Alerting:** `rules/alerts.yml` -> Prometheus (`rule_files`) -> `alertmanager` (:9093)
-  -> `webhook-logger` (view via `docker compose logs webhook-logger`). `ExporterDown`
-  fires on startup off the idle `up=0` targets. See `docs/alertmanager.md`.
+  -> `webhook-logger` (view via `docker compose logs webhook-logger`). `ExporterDown` (scoped
+  to restart-looping exporters) and `BackendDown` (database *_up gauges) fire on startup.
+  See `docs/alertmanager.md`.
 - **New ports:** node 9100, mysqld 9104, apache 9117, nginx 9113, redis 9121,
   postgres 9187, mongodb 9216, kafka 9308, rabbitmq 9419, haproxy 9101, ceph 9128,
   radosgw 9242, gluster 9713, stackdriver 9255, azure 8080, mssql 4000,
