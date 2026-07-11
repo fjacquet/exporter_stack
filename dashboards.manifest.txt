@@ -14,3 +14,19 @@ pve      fjacquet/pve_exporter     default  grafana/dashboards/
 vmware   fjacquet/vmware_licenses_exporter  default  grafana/dashboards/
 m365     fjacquet/m365_licenses_exporter    default  grafana/dashboards/
 veeam    fjacquet/veeam_licenses_exporter   default  grafana/dashboards/
+node     -  default  gcom:1860
+postgres -  default  gcom:9628
+mysqld   -  default  gcom:7362
+mongodb  -  default  gcom:20867
+mssql    -  default  gcom:9336
+redis    -  default  gcom:763
+nginx    -  default  gcom:12708
+apache   -  default  gcom:3894
+haproxy  -  default  gcom:367
+rabbitmq -  default  gcom:4279
+kafka    -  default  gcom:7589
+ceph     -  default  gcom:917
+gluster  -  default  gcom:8376
+stackdriver -  default  gcom:16572
+windows  -  default  gcom:14694
+# azure, radosgw: no canonical grafana.com dashboard — omitted this batch (follow-up).

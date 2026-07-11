@@ -7,3 +7,6 @@
 
 # Dashboards are fetched at runtime, never committed
 /grafana/dashboards/
+
+# Editor / IDE local settings
+.vscode/

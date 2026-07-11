@@ -2,6 +2,14 @@ global:
   scrape_interval: 30s
   scrape_timeout: 15s
 
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['alertmanager:9093']
+
+rule_files:
+  - /etc/prometheus/rules/*.yml
+
 # One Prometheus scrapes every exporter by Docker service name on the shared network.
 scrape_configs:
   - job_name: idrac_exporter
@@ -32,3 +40,40 @@ scrape_configs:
     static_configs: [{ targets: ['m365_licenses_exporter:9105'] }]
   - job_name: veeam_licenses_exporter
     static_configs: [{ targets: ['veeam_licenses_exporter:9107'] }]
+  - job_name: node_exporter
+    static_configs: [{ targets: ['node_exporter:9100'] }]
+  - job_name: postgres_exporter
+    static_configs: [{ targets: ['postgres_exporter:9187'] }]
+  - job_name: mysqld_exporter
+    static_configs: [{ targets: ['mysqld_exporter:9104'] }]
+  - job_name: mongodb_exporter
+    static_configs: [{ targets: ['mongodb_exporter:9216'] }]
+  - job_name: mssql_exporter
+    static_configs: [{ targets: ['mssql_exporter:4000'] }]
+  - job_name: redis_exporter
+    static_configs: [{ targets: ['redis_exporter:9121'] }]
+  - job_name: nginx_exporter
+    static_configs: [{ targets: ['nginx_exporter:9113'] }]
+  - job_name: apache_exporter
+    static_configs: [{ targets: ['apache_exporter:9117'] }]
+  - job_name: haproxy_exporter
+    static_configs: [{ targets: ['haproxy_exporter:9101'] }]
+  - job_name: rabbitmq_exporter
+    static_configs: [{ targets: ['rabbitmq_exporter:9419'] }]
+  - job_name: kafka_exporter
+    static_configs: [{ targets: ['kafka_exporter:9308'] }]
+  - job_name: stackdriver_exporter
+    static_configs: [{ targets: ['stackdriver_exporter:9255'] }]
+  - job_name: azure_exporter
+    static_configs: [{ targets: ['azure_exporter:8080'] }]
+  - job_name: ceph_exporter
+    static_configs: [{ targets: ['ceph_exporter:9128'] }]
+  - job_name: radosgw_exporter
+    static_configs: [{ targets: ['radosgw_exporter:9242'] }]
+  - job_name: gluster_exporter
+    static_configs: [{ targets: ['gluster_exporter:9713'] }]
+
+  # Windows Exporter runs only on Windows hosts (no Linux container). Uncomment and
+  # point at your Windows host(s) running windows_exporter on :9182.
+  # - job_name: windows_exporter
+  #   static_configs: [{ targets: ['windows-host.example.com:9182'] }]

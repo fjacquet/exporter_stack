@@ -224,12 +224,208 @@ services:
     networks: [exporters]
     restart: unless-stopped
 
+  node_exporter:
+    image: quay.io/prometheus/node-exporter:${NODE_TAG:-latest}
+    container_name: es_node_exporter
+    command:
+      - '--path.rootfs=/host'
+    pid: host
+    volumes:
+      - '/:/host:ro'
+    ports: ["9100:9100"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  postgres_exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:${POSTGRES_TAG:-latest}
+    container_name: es_postgres_exporter
+    environment:
+      - DATA_SOURCE_NAME=${POSTGRES_DSN:-postgresql://postgres:changeme@postgres.example.com:5432/postgres?sslmode=disable}
+    ports: ["9187:9187"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  mysqld_exporter:
+    image: quay.io/prometheus/mysqld-exporter:${MYSQLD_TAG:-latest}
+    container_name: es_mysqld_exporter
+    command:
+      - '--config.my-cnf=/etc/mysqld_exporter/.my.cnf'
+      - '--mysqld.address=${MYSQL_ADDRESS:-mysql.example.com:3306}'
+    volumes:
+      - ./configs/mysqld.cnf:/etc/mysqld_exporter/.my.cnf:ro
+    ports: ["9104:9104"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  mongodb_exporter:
+    # percona/mongodb_exporter has no :latest tag — pin a version
+    image: percona/mongodb_exporter:${MONGODB_TAG:-0.51.0}
+    container_name: es_mongodb_exporter
+    command:
+      - '--mongodb.uri=${MONGODB_URI:-mongodb://exporter:changeme@mongodb.example.com:27017}'
+      - '--collect-all'
+    ports: ["9216:9216"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  mssql_exporter:
+    image: awaragi/prometheus-mssql-exporter:${MSSQL_TAG:-latest}
+    container_name: es_mssql_exporter
+    environment:
+      - SERVER=${MSSQL_SERVER:-mssql.example.com}
+      - PORT=${MSSQL_PORT:-1433}
+      - USERNAME=${MSSQL_USERNAME:-sa}
+      - PASSWORD=${MSSQL_PASSWORD:-changeme}
+      - EXPOSE=4000
+    ports: ["4000:4000"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  redis_exporter:
+    image: oliver006/redis_exporter:${REDIS_TAG:-latest}
+    container_name: es_redis_exporter
+    environment:
+      - REDIS_ADDR=${REDIS_ADDR:-redis://redis.example.com:6379}
+      - REDIS_PASSWORD=${REDIS_PASSWORD:-changeme}
+    ports: ["9121:9121"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  nginx_exporter:
+    image: nginx/nginx-prometheus-exporter:${NGINX_TAG:-latest}
+    container_name: es_nginx_exporter
+    command:
+      - '--nginx.scrape-uri=${NGINX_SCRAPE_URI:-http://nginx.example.com:8080/stub_status}'
+    ports: ["9113:9113"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  apache_exporter:
+    image: quay.io/lusitaniae/apache-exporter:${APACHE_TAG:-latest}
+    container_name: es_apache_exporter
+    command:
+      - '--scrape_uri=${APACHE_SCRAPE_URI:-http://apache.example.com/server-status?auto}'
+    ports: ["9117:9117"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  haproxy_exporter:
+    image: quay.io/prometheus/haproxy-exporter:${HAPROXY_TAG:-latest}
+    container_name: es_haproxy_exporter
+    command:
+      - '--haproxy.scrape-uri=${HAPROXY_SCRAPE_URI:-http://haproxy.example.com:8404/haproxy?stats;csv}'
+    ports: ["9101:9101"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  rabbitmq_exporter:
+    image: kbudde/rabbitmq-exporter:${RABBITMQ_TAG:-latest}
+    container_name: es_rabbitmq_exporter
+    environment:
+      - RABBIT_URL=${RABBIT_URL:-http://rabbitmq.example.com:15672}
+      - RABBIT_USER=${RABBIT_USER:-monitoring}
+      - RABBIT_PASSWORD=${RABBIT_PASSWORD:-changeme}
+    ports: ["9419:9419"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  kafka_exporter:
+    image: danielqsj/kafka-exporter:${KAFKA_TAG:-latest}
+    container_name: es_kafka_exporter
+    command:
+      - '--kafka.server=${KAFKA_SERVER:-kafka.example.com:9092}'
+    ports: ["9308:9308"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  stackdriver_exporter:
+    image: quay.io/prometheuscommunity/stackdriver-exporter:${STACKDRIVER_TAG:-latest}
+    container_name: es_stackdriver_exporter
+    command:
+      - '--google.project-ids=${GCP_PROJECT_ID:-my-gcp-project}'
+      - '--monitoring.metrics-type-prefixes=compute.googleapis.com/instance/cpu'
+    environment:
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-}
+    ports: ["9255:9255"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  azure_exporter:
+    image: quay.io/webdevops/azure-metrics-exporter:${AZURE_TAG:-latest}
+    container_name: es_azure_exporter
+    environment:
+      - AZURE_TENANT_ID=${AZURE_TENANT_ID:-00000000-0000-0000-0000-000000000000}
+      - AZURE_CLIENT_ID=${AZURE_CLIENT_ID:-00000000-0000-0000-0000-000000000000}
+      - AZURE_CLIENT_SECRET=${AZURE_CLIENT_SECRET:-changeme}
+    ports: ["8080:8080"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  ceph_exporter:
+    # amd64-only image — platform pin required on arm64 hosts (e.g. Apple Silicon).
+    image: digitalocean/ceph_exporter:${CEPH_TAG:-latest}
+    platform: linux/amd64
+    container_name: es_ceph_exporter
+    volumes:
+      - ./configs/ceph.conf:/etc/ceph/ceph.conf:ro
+      - ./configs/ceph.keyring:/etc/ceph/keyring:ro
+    ports: ["9128:9128"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  radosgw_exporter:
+    image: ghcr.io/pando85/radosgw_usage_exporter:${RADOSGW_TAG:-latest}
+    container_name: es_radosgw_exporter
+    environment:
+      - RADOSGW_SERVER=${RADOSGW_SERVER:-http://radosgw.example.com:7480}
+      - ACCESS_KEY=${RADOSGW_ACCESS_KEY:-changeme}
+      - SECRET_KEY=${RADOSGW_SECRET_KEY:-changeme}
+    ports: ["9242:9242"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  gluster_exporter:
+    # gluster/gluster-prometheus:latest is not published on Docker Hub (denied/unauthorized);
+    # substituted the community mirror kurzdigital/gluster-prometheus (same upstream source).
+    # amd64-only image (built 2018) — platform pin required on arm64 hosts (e.g. Apple Silicon).
+    image: kurzdigital/gluster-prometheus:${GLUSTER_TAG:-latest}
+    platform: linux/amd64
+    container_name: es_gluster_exporter
+    # image's default CMD is a bare /bin/sh (exits immediately) — the exporter binary
+    # must be invoked explicitly.
+    command: ["/gluster-exporter"]
+    volumes:
+      - ./configs/gluster-exporter.toml:/etc/gluster-prometheus/gluster-exporter.toml:ro
+    ports: ["9713:9713"]
+    networks: [exporters]
+    restart: unless-stopped
+
   # ===================== shared observability =====================
+  alertmanager:
+    image: prom/alertmanager:${ALERTMANAGER_TAG:-latest}
+    container_name: es_alertmanager
+    volumes:
+      - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+      - ./alertmanager/templates:/etc/alertmanager/templates:ro
+    ports: ["9093:9093"]
+    networks: [exporters]
+    restart: unless-stopped
+
+  webhook-logger:
+    image: mendhak/http-https-echo:${WEBHOOK_LOGGER_TAG:-latest}
+    container_name: es_webhook_logger
+    environment:
+      - HTTP_PORT=8080
+    ports: ["9095:8080"]
+    networks: [exporters]
+    restart: unless-stopped
+
   prometheus:
     image: prom/prometheus:latest
     container_name: es_prometheus
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./rules:/etc/prometheus/rules:ro
     ports: ["9090:9090"]
     networks: [exporters]
     restart: unless-stopped

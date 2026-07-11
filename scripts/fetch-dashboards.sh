@@ -13,6 +13,7 @@ MANIFEST="${MANIFEST:-/manifest/dashboards.manifest.txt}"
 OUT="${OUT:-/dashboards}"
 API="https://api.github.com"
 RAW="https://raw.githubusercontent.com"
+GCOM="https://grafana.com/api/dashboards"
 GLOBAL_REF="${DASHBOARD_REF:-default}"
 
 gh_get() { # url -> body on stdout
@@ -42,16 +43,45 @@ flatname() { # repo-path -> filename: strip leading grafana/, replace "/" with "
   printf '%s' "${1#grafana/}" | sed 's#/#__#g'
 }
 
+fetch_gcom() { # id destfile -> 0 on success, writes normalised dashboard JSON
+  _id="$1"; _out="$2"
+  _rev=$(curl -fsSL "$GCOM/$_id" | jq -r '.revision // empty' 2>/dev/null)
+  [ -n "$_rev" ] || return 1
+  _raw=$(curl -fsSL "$GCOM/$_id/revisions/$_rev/download") || return 1
+  [ -n "$_raw" ] || return 1
+  _dsvar=$(printf '%s' "$_raw" \
+    | jq -r '(.__inputs // [])[] | select(.pluginId=="prometheus") | .name' 2>/dev/null \
+    | head -n1)
+  [ -n "$_dsvar" ] || _dsvar="DS_PROMETHEUS"
+  printf '%s' "$_raw" \
+    | jq 'del(.__inputs, .__requires)' \
+    | sed "s/\${$_dsvar}/prometheus/g" > "$_out" 2>/dev/null || return 1
+  [ -s "$_out" ] || return 1
+  return 0
+}
+
 total=0; ok=0
 rm -rf "${OUT:?}/"* 2>/dev/null || true
 
 while read -r name repo ref paths || [ -n "${name:-}" ]; do
   case "$name" in ""|\#*) continue ;; esac
   [ "$GLOBAL_REF" != "default" ] && ref="$GLOBAL_REF"
-  rref=$(resolve_ref "$repo" "$ref")
+  case "$repo" in
+    -) rref="-" ;;
+    *) rref=$(resolve_ref "$repo" "$ref") ;;
+  esac
   dest="$OUT/$name"; mkdir -p "$dest"
   for path in $paths; do
     case "$path" in
+      gcom:*)
+        total=$((total + 1))
+        _gid=${path#gcom:}
+        if fetch_gcom "$_gid" "$dest/$_gid.json"; then
+          ok=$((ok + 1)); echo "ok   $name  grafana.com/$_gid"
+        else
+          echo "WARN failed: $name  grafana.com/$_gid" >&2
+        fi
+        continue ;;
       */) files=$(list_dir "$repo" "$rref" "$path") ;;
       *)  files="$path" ;;
     esac
