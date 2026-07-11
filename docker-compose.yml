@@ -258,6 +258,7 @@ services:
     restart: unless-stopped
 
   mongodb_exporter:
+    # percona/mongodb_exporter has no :latest tag — pin a version
     image: percona/mongodb_exporter:${MONGODB_TAG:-0.51.0}
     container_name: es_mongodb_exporter
     command:

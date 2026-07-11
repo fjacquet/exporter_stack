@@ -40,11 +40,11 @@ Tear down with `docker compose down`.
 | m365   | `m365_licenses_exporter`   | 9105 | Microsoft 365 licenses |
 | veeam  | `veeam_licenses_exporter`  | 9107 | Veeam Backup Enterprise Manager licenses |
 | node   | `quay.io/prometheus/node-exporter` | 9100 | Linux/host metrics (live) |
-| postgres | `quay.io/prometheuscommunity/postgres-exporter` | 9187 | PostgreSQL (idle, `up=0`) |
-| mysqld | `quay.io/prometheus/mysqld-exporter` | 9104 | MySQL/MariaDB (idle, `up=0`) |
-| mongodb | `percona/mongodb_exporter` | 9216 | MongoDB (idle, `up=0`) |
-| mssql | `awaragi/prometheus-mssql-exporter` | 4000 | Microsoft SQL Server (idle, `up=0`) |
-| redis | `oliver006/redis_exporter` | 9121 | Redis (idle, `up=0`) |
+| postgres | `quay.io/prometheuscommunity/postgres-exporter` | 9187 | PostgreSQL (idle — `pg_up 0`) |
+| mysqld | `quay.io/prometheus/mysqld-exporter` | 9104 | MySQL/MariaDB (idle — `mysql_up 0`) |
+| mongodb | `percona/mongodb_exporter` | 9216 | MongoDB (idle — `mongodb_up 0`) |
+| mssql | `awaragi/prometheus-mssql-exporter` | 4000 | Microsoft SQL Server (idle — `mssql_up 0`) |
+| redis | `oliver006/redis_exporter` | 9121 | Redis (idle — `redis_up 0`) |
 
 Fred's own exporters (idrac…veeam above) use the `ghcr.io/fjacquet/…` shorthand in the Image
 column. Community/third-party exporters (node, postgres, mysqld, mongodb, mssql, redis above,
