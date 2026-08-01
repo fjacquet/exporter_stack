@@ -7,6 +7,18 @@ All notable changes to this project are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- `BackendDown` now covers **every** exporter's health gauge, not just the databases
+  and the licensing trio. The Dell storage, NetWorker, Proxmox and Kemp exporters
+  serve `/metrics` happily while their backend is unreachable, so `up` stays 1 and
+  nothing fired — a PowerStore or a LoadMaster could be entirely dead in silence.
+  The gauge names are not derivable from the job name (obs publishes `ecs_up`,
+  pstore `powerstore_up`, pscale `powerscale_up`, ppdd `ppdd_collector_up`), so each
+  was read from that exporter's own docs and then confirmed against a live scrape:
+  16 of the 18 selected gauges produce series, and 21 alerts fire in the demo.
+- `PowerScaleAbsent`, because `pscale_exporter` is the one exporter whose health
+  gauge goes *absent* rather than zero when its cluster is unreachable — verified
+  live, it then exposes only `pscale_exporter_build_info`. A `== 0` rule structurally
+  cannot see that, so absence is the only available signal.
 - Persistent storage for the shared observability services: named volumes
   `prometheus_data` (`/prometheus`), `grafana_data` (`/var/lib/grafana`) and
   `alertmanager_data` (`/alertmanager`). Metric history, Grafana users / API keys /
