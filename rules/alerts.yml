@@ -17,8 +17,16 @@ groups:
 
   - name: backend-availability
     rules:
+      # One rule for every health gauge in the stack. The gauge names are NOT
+      # derivable from the repo or job name -- obs publishes `ecs_up`, pstore
+      # publishes `powerstore_up`, pscale `powerscale_up`, ppdd
+      # `ppdd_collector_up`. Each name below was read from that exporter's own
+      # docs; guessing produces a selector that matches nothing and an alert
+      # that silently never fires. Adding an exporter here means looking its
+      # gauge up, not pattern-matching.
       - alert: BackendDown
-        expr: pg_up == 0 or mysql_up == 0 or redis_up == 0 or mongodb_up == 0 or mssql_up == 0 or license_up == 0
+        expr: >-
+          {__name__=~"pg_up|mysql_up|redis_up|mongodb_up|mssql_up|license_up|ecs_up|nsr_up|pve_up|kemp_up|pmax_up|powerstore_up|powerscale_up|pflex_up|ppdm_up|ppdd_collector_up|nbu_up|idrac_up"} == 0
         for: 1m
         labels:
           severity: warning
@@ -26,10 +34,37 @@ groups:
           summary: "Exporter {{ $labels.job }} cannot reach its backend"
           description: >-
             {{ $labels.job }} scrapes fine (up == 1) but its internal health gauge
-            reports the monitored backend unreachable. In this demo the database
-            exporters (`*_up = 0`) and the licensing exporters vmware/m365/veeam
-            (`license_up = 0`) fire this because they point at fictional targets.
-            Fires on startup by design.
+            ({{ $labels.__name__ }}) reports the monitored backend unreachable.
+            This is the failure the plain `up` metric cannot see: a storage array
+            or LoadMaster can be entirely unreachable while its exporter keeps
+            serving /metrics happily, so the Prometheus target stays green.
+            In this demo the database exporters, the licensing trio
+            (`license_up`) and every Dell/infrastructure exporter fire because
+            they point at fictional targets. Fires on startup by design.
+            Note idrac and nbu also appear in ExporterDown -- they collect on
+            demand, so a dead backend can surface as either alert or both.
+            Two gauges in the selector are verified-correct but produce no
+            series in this demo: `idrac_up` needs the off-by-default OTLP loop,
+            and pscale emits nothing at all when the cluster is unreachable
+            (its siblings emit `<prefix>_up 0`), so an absent PowerScale is
+            invisible to a `== 0` rule -- see PowerScaleAbsent below.
+
+      # pscale is the one exporter whose health gauge goes *absent* rather than
+      # zero when its backend is unreachable, so BackendDown structurally cannot
+      # catch it. Verified live: with an unreachable cluster the target scrapes
+      # green and exposes only `pscale_exporter_build_info`.
+      - alert: PowerScaleAbsent
+        expr: absent(powerscale_up) and on() up{job="pscale_exporter"} == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "pscale_exporter is up but reports no PowerScale cluster"
+          description: >-
+            The pscale_exporter target is scraping fine, but `powerscale_up` is
+            absent entirely -- no cluster was collected. Unlike its siblings it
+            does not emit a zero gauge on failure, so this absence is the only
+            available signal. Fires in this demo by design (fictional cluster).
 
   - name: demo-heartbeat
     rules:

@@ -168,6 +168,20 @@ services:
     networks: [exporters]
     restart: unless-stopped
 
+  kemp_exporter:
+    image: ghcr.io/fjacquet/kemp_exporter:${KEMP_TAG:-latest}
+    container_name: es_kemp_exporter
+    command: ["--config", "/etc/kemp_exporter/config.yaml"]
+    volumes:
+      - ./configs/kemp.yaml:/etc/kemp_exporter/config.yaml:ro
+    environment:
+      - KEMP1_HOSTNAME=${KEMP1_HOSTNAME:-10.0.0.1}
+      - KEMP1_APIKEY=${KEMP1_APIKEY:-changeme}
+    # 9448, not 9447 — 9447 is nsr_exporter's.
+    ports: ["9448:9448"]
+    networks: [exporters]
+    restart: unless-stopped
+
   pve_exporter:
     image: ghcr.io/fjacquet/pve_exporter:${PVE_TAG:-latest}
     container_name: es_pve_exporter
@@ -407,6 +421,9 @@ services:
     volumes:
       - ./alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
       - ./alertmanager/templates:/etc/alertmanager/templates:ro
+      # Silences + notification log survive `docker compose down`. /alertmanager
+      # is the image's own default --storage.path (and its declared VOLUME).
+      - alertmanager_data:/alertmanager
     ports: ["9093:9093"]
     networks: [exporters]
     restart: unless-stopped
@@ -423,9 +440,24 @@ services:
   prometheus:
     image: prom/prometheus:latest
     container_name: es_prometheus
+    # The image's default CMD is exactly
+    #   --config.file=/etc/prometheus/prometheus.yml --storage.tsdb.path=/prometheus
+    # Setting `command:` REPLACES it, so both flags are reproduced verbatim here;
+    # dropping either breaks startup or silently writes the TSDB somewhere the
+    # volume does not cover. Retention is bounded on BOTH axes on purpose: time
+    # alone lets a busy stack fill the disk, size alone lets a quiet one keep data
+    # forever. Whichever bound is hit first wins.
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=${PROMETHEUS_RETENTION_TIME:-30d}'
+      - '--storage.tsdb.retention.size=${PROMETHEUS_RETENTION_SIZE:-10GB}'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - ./rules:/etc/prometheus/rules:ro
+      # Metric history survives `docker compose down`. /prometheus is the image's
+      # own default --storage.tsdb.path (and its declared VOLUME + WORKDIR).
+      - prometheus_data:/prometheus
     ports: ["9090:9090"]
     networks: [exporters]
     restart: unless-stopped
@@ -437,8 +469,17 @@ services:
       - GF_SECURITY_ADMIN_USER=${GF_ADMIN_USER:-admin}
       - GF_SECURITY_ADMIN_PASSWORD=${GF_ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
+      # Already the image default; stated explicitly so the volume below and
+      # Grafana's SQLite path can never drift apart.
+      - GF_PATHS_DATA=/var/lib/grafana
     volumes:
       - ./grafana/provisioning:/etc/grafana/provisioning:ro
+      # Grafana's own SQLite DB (users, API keys, dashboard edits, prefs).
+      # /var/lib/grafana == GF_PATHS_DATA in the upstream image.
+      - grafana_data:/var/lib/grafana
+      # Fetched dashboard JSON, mounted *inside* grafana_data. Docker mounts the
+      # longer path last, so this shadows the dashboards/ subdir of grafana_data
+      # and the one-shot fetcher keeps owning those files.
       - dashboards:/var/lib/grafana/dashboards
     ports: ["3000:3000"]
     networks: [exporters]
@@ -454,4 +495,12 @@ networks:
     driver: bridge
 
 volumes:
+  # Dashboard JSON, refilled from upstream on every `up` by dashboard-fetcher.
   dashboards:
+  # State that must survive a reboot. Named volumes (not bind mounts) on purpose:
+  # prometheus/alertmanager run as uid 65534 and grafana as uid 472, and a named
+  # volume is chowned by Docker on first use — a host bind mount would need a
+  # manual chown per path. `docker compose down` keeps these; only `down -v` wipes.
+  prometheus_data:
+  grafana_data:
+  alertmanager_data:

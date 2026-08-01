@@ -7,10 +7,45 @@ All notable changes to this project are documented here. The format is based on
 ## [Unreleased]
 
 ### Added
+- `BackendDown` now covers **every** exporter's health gauge, not just the databases
+  and the licensing trio. The Dell storage, NetWorker, Proxmox and Kemp exporters
+  serve `/metrics` happily while their backend is unreachable, so `up` stays 1 and
+  nothing fired — a PowerStore or a LoadMaster could be entirely dead in silence.
+  The gauge names are not derivable from the job name (obs publishes `ecs_up`,
+  pstore `powerstore_up`, pscale `powerscale_up`, ppdd `ppdd_collector_up`), so each
+  was read from that exporter's own docs and then confirmed against a live scrape:
+  16 of the 18 selected gauges produce series, and 21 alerts fire in the demo.
+- `PowerScaleAbsent`, because `pscale_exporter` is the one exporter whose health
+  gauge goes *absent* rather than zero when its cluster is unreachable — verified
+  live, it then exposes only `pscale_exporter_build_info`. A `== 0` rule structurally
+  cannot see that, so absence is the only available signal.
+- Persistent storage for the shared observability services: named volumes
+  `prometheus_data` (`/prometheus`), `grafana_data` (`/var/lib/grafana`) and
+  `alertmanager_data` (`/alertmanager`). Metric history, Grafana users / API keys /
+  dashboard edits and Alertmanager silences now survive a reboot or a plain
+  `docker compose down`. Each mount path is the upstream image's own default, and
+  `GF_PATHS_DATA` is stated explicitly so Grafana's SQLite path cannot drift from its volume.
+- Bounded Prometheus retention, overridable in `.env`: `PROMETHEUS_RETENTION_TIME` (`30d`)
+  and `PROMETHEUS_RETENTION_SIZE` (`10GB`), whichever limit is reached first. Prometheus now
+  sets an explicit `command:` that reproduces the image's default `--config.file` and
+  `--storage.tsdb.path` flags alongside the two retention flags.
+- `kemp_exporter` v0.2.0 to the stack: Kemp/Progress LoadMaster metrics on port **9448**
+  (it moved off 9447, which stays with `nsr_exporter`), configured via `configs/kemp.yaml`
+  with `KEMP1_HOSTNAME` / `KEMP1_APIKEY` and pinnable with `KEMP_TAG`.
+- The `kemp-overview` dashboard, fetched from `fjacquet/kemp_exporter` at startup.
 - `pve_exporter` to the stack (11 exporters total): Proxmox VE metrics on port 9221,
   with token-based API auth (`PVE1_HOST`, `PVE1_TOKEN_ID`, `PVE1_TOKEN_SECRET`).
 - Six Proxmox dashboards fetched from `fjacquet/pve_exporter` at startup
   (pve-cluster-overview, pve-node, pve-guest, pve-storage, pve-backup-dr, pve-ha-quorum).
+- README: how to refresh images and dashboards (`docker compose pull` + `up -d`), and a note
+  that container health comes from the images' own `HEALTHCHECK`, not from a `healthcheck:`
+  block in this compose file.
+
+### Changed
+- Refreshed every image with `docker compose pull` and re-ran `dashboard-fetcher`; the
+  manifest now resolves 98/98 dashboards across 30 folders. Images stay unpinned on
+  `:latest` by design — pull, don't pin.
+- README quick start said "all 10 exporter images"; the stack now runs 31 exporter services.
 
 ## [0.1.0] - 2026-06-16
 

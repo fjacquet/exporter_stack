@@ -10,6 +10,7 @@ pscale   fjacquet/pscale_exporter  default  grafana/provisioning/dashboards/json
 pflex    fjacquet/pflex_exporter   default  grafana/gen1/ grafana/gen2/
 pstore   fjacquet/pstore_exporter  default  grafana/dashboards/
 nsr      fjacquet/nsr_exporter     default  grafana/dashboards/
+kemp     fjacquet/kemp_exporter    default  grafana/kemp-overview.json
 pve      fjacquet/pve_exporter     default  grafana/dashboards/
 vmware   fjacquet/vmware_licenses_exporter  default  grafana/dashboards/
 m365     fjacquet/m365_licenses_exporter    default  grafana/dashboards/

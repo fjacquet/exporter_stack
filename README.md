@@ -15,7 +15,7 @@ docker compose up -d
 - **Grafana** → http://localhost:3000 (`admin`/`admin`) — one dashboard folder per exporter
 - **Prometheus** → http://localhost:9090 → *Status → Targets*
 
-Everything starts with no configuration: all 10 exporter images are pulled, the dashboards
+Everything starts with no configuration: all 31 exporter images are pulled, the dashboards
 are fetched from upstream, and Prometheus + Grafana come up. Without real credentials the
 exporters still run but report no live data (see [Targets without real hardware](#targets-without-real-hardware)).
 
@@ -35,6 +35,7 @@ Tear down with `docker compose down`.
 | pflex  | `pflex_exporter`  | 9445 | Dell PowerFlex |
 | pstore | `pstore_exporter` | 9446 | Dell PowerStore |
 | nsr    | `nsr_exporter`    | 9447 | Dell NetWorker |
+| kemp   | `kemp_exporter`   | 9448 | Kemp/Progress LoadMaster |
 | pve    | `pve_exporter`    | 9221 | Proxmox Virtual Environment |
 | vmware | `vmware_licenses_exporter` | 9106 | VMware vSphere licenses |
 | m365   | `m365_licenses_exporter`   | 9105 | Microsoft 365 licenses |
@@ -82,11 +83,46 @@ Credentials left unset fall back to a non-functional `changeme` placeholder so e
 exporter still boots. Replace them with real values for live data. For multi-instance
 monitoring, edit the relevant `configs/<exporter>.yaml` directly.
 
+## Persistence and retention
+
+Prometheus, Grafana and Alertmanager each keep their state in a **named Docker volume**, so
+a reboot (or a plain `docker compose down`) no longer loses metric history, Grafana users /
+dashboard edits / API keys, or Alertmanager silences and notification state.
+
+| Volume | Mounted at | Holds |
+|---|---|---|
+| `prometheus_data` | `/prometheus` | TSDB — all metric history |
+| `grafana_data` | `/var/lib/grafana` | Grafana SQLite DB: users, API keys, dashboard edits, prefs |
+| `alertmanager_data` | `/alertmanager` | silences + notification log |
+| `dashboards` | `/var/lib/grafana/dashboards` | dashboard JSON, refetched from upstream on every `up` |
+
+Each mount path is the image's *own* default (`--storage.tsdb.path`, `GF_PATHS_DATA`,
+`--storage.path`) — a wrong path would mount fine and persist nothing. Named volumes are
+used rather than host bind mounts so Docker handles ownership: Prometheus and Alertmanager
+run as uid 65534, Grafana as uid 472.
+
+Because `prometheus` now sets an explicit `command:`, it also reproduces the two flags from
+the image's default `CMD` (`--config.file`, `--storage.tsdb.path`) verbatim — dropping either
+would break startup or write the TSDB outside the volume.
+
+Retention is bounded on **both** axes, whichever is hit first (persisting without a bound
+just trades "loses everything on reboot" for "fills the disk in a few months"):
+
+| Variable | Default | Flag |
+|---|---|---|
+| `PROMETHEUS_RETENTION_TIME` | `30d` | `--storage.tsdb.retention.time` |
+| `PROMETHEUS_RETENTION_SIZE` | `10GB` | `--storage.tsdb.retention.size` |
+
+Both are overridable in `.env` and fall back to those defaults when unset.
+
+`docker compose down` keeps all four volumes. **`docker compose down -v` deletes them** —
+that is the only supported way to reset the stack's state.
+
 ## Targets without real hardware
 
 With placeholder credentials and unreachable example hosts:
 
-- **Most exporters** (obs, ppdd, ppdm, pmax, pscale, pflex, pstore, nsr) collect in the
+- **Most exporters** (obs, ppdd, ppdm, pmax, pscale, pflex, pstore, nsr, kemp) collect in the
   background, so Prometheus scrapes them successfully and per-target health shows in an
   `<exporter>_up 0` gauge.
 - **idrac and nbu** collect on demand — they query the backend during each scrape — so
@@ -112,6 +148,25 @@ With placeholder credentials and unreachable example hosts:
   entry (Task 12).
 
 This is expected. Point `configs/` and `.env` at real, reachable targets to get live data.
+
+## Keeping images and dashboards fresh
+
+Images are intentionally **unpinned** (`:latest`, via the `*_TAG` defaults), so refreshing
+the stack is just:
+
+```bash
+docker compose pull        # refresh every image
+docker compose up -d       # recreate what changed; re-runs dashboard-fetcher
+```
+
+`dashboard-fetcher` runs on every `up`, so dashboards are re-downloaded from each exporter's
+repo at the same time. `docker compose logs dashboard-fetcher` ends with a `fetched N/N
+dashboards` line — a mismatch there is the signal that a manifest path went stale.
+
+Container health comes from the **images' own `HEALTHCHECK`**, not from this compose file:
+Fred's exporters all serve always-200 `/livez` and `/readyz` and ship a `HEALTHCHECK` that
+probes `/livez`, so `docker compose ps` shows them `(healthy)` with no `healthcheck:` block
+here. Community exporter images vary — most ship none, and simply show `Up`.
 
 ## Alerting
 
