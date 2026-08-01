@@ -168,6 +168,20 @@ services:
     networks: [exporters]
     restart: unless-stopped
 
+  kemp_exporter:
+    image: ghcr.io/fjacquet/kemp_exporter:${KEMP_TAG:-latest}
+    container_name: es_kemp_exporter
+    command: ["--config", "/etc/kemp_exporter/config.yaml"]
+    volumes:
+      - ./configs/kemp.yaml:/etc/kemp_exporter/config.yaml:ro
+    environment:
+      - KEMP1_HOSTNAME=${KEMP1_HOSTNAME:-10.0.0.1}
+      - KEMP1_APIKEY=${KEMP1_APIKEY:-changeme}
+    # 9448, not 9447 — 9447 is nsr_exporter's.
+    ports: ["9448:9448"]
+    networks: [exporters]
+    restart: unless-stopped
+
   pve_exporter:
     image: ghcr.io/fjacquet/pve_exporter:${PVE_TAG:-latest}
     container_name: es_pve_exporter

@@ -1,0 +1,37 @@
+---
+# kemp_exporter configuration. config.yaml is the source of truth; ${ENV_VAR}
+# references in host/apiKey expand at load (fail-fast on unset). Placeholder
+# refs inside comments are written <LIKE_THIS>, never ${LIKE_THIS} — the loader
+# expands the whole file, so a ${VAR} in a comment fatal-loops the container.
+server:
+  host: "0.0.0.0"
+  port: "9448"        # exporter's own /metrics port (9447 belongs to nsr_exporter)
+  uri: "/metrics"
+  logName: ""         # "" → stdout
+collection:
+  interval: "60s"     # background poll frequency
+  timeout: "60s"      # per-system API deadline
+  maxConcurrent: 4
+otel:
+  enabled: false
+  endpoint: "localhost:4317"
+  insecure: true
+  interval: "10s"
+systems:
+  # Every entry needs a unique, non-empty name: it becomes the `system` label on
+  # every metric, so two appliances sharing one collide into a single series set.
+  - name: lm-prod-01
+    host: "${KEMP1_HOSTNAME}"
+    # XML transport: a static API key, ideally scoped read-only.
+    apiKey: "${KEMP1_APIKEY}"
+    # JSON transport: session login instead of an API key. Requires firmware
+    # 7.2.50+ with session management enabled.
+    # username: "<KEMP1_USERNAME>"
+    # password: "<KEMP1_PASSWORD>"
+    # LoadMasters ship a self-signed certificate by default; set this false once
+    # the appliance presents a certificate this stack can verify.
+    insecureSkipVerify: true
+  # Multi-target = one entry per LoadMaster.
+  # - name: lm-prod-02
+  #   host: "lm-prod-02.example.com"
+  #   apiKey: "<KEMP2_APIKEY>"

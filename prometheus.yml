@@ -32,6 +32,8 @@ scrape_configs:
     static_configs: [{ targets: ['pstore_exporter:9446'] }]
   - job_name: nsr_exporter
     static_configs: [{ targets: ['nsr_exporter:9447'] }]
+  - job_name: kemp_exporter
+    static_configs: [{ targets: ['kemp_exporter:9448'] }]
   - job_name: pve
     static_configs: [{ targets: ['pve_exporter:9221'] }]
   - job_name: vmware_licenses_exporter

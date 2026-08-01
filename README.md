@@ -35,6 +35,7 @@ Tear down with `docker compose down`.
 | pflex  | `pflex_exporter`  | 9445 | Dell PowerFlex |
 | pstore | `pstore_exporter` | 9446 | Dell PowerStore |
 | nsr    | `nsr_exporter`    | 9447 | Dell NetWorker |
+| kemp   | `kemp_exporter`   | 9448 | Kemp/Progress LoadMaster |
 | pve    | `pve_exporter`    | 9221 | Proxmox Virtual Environment |
 | vmware | `vmware_licenses_exporter` | 9106 | VMware vSphere licenses |
 | m365   | `m365_licenses_exporter`   | 9105 | Microsoft 365 licenses |
@@ -121,7 +122,7 @@ that is the only supported way to reset the stack's state.
 
 With placeholder credentials and unreachable example hosts:
 
-- **Most exporters** (obs, ppdd, ppdm, pmax, pscale, pflex, pstore, nsr) collect in the
+- **Most exporters** (obs, ppdd, ppdm, pmax, pscale, pflex, pstore, nsr, kemp) collect in the
   background, so Prometheus scrapes them successfully and per-target health shows in an
   `<exporter>_up 0` gauge.
 - **idrac and nbu** collect on demand — they query the backend during each scrape — so

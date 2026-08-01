@@ -17,6 +17,10 @@ All notable changes to this project are documented here. The format is based on
   and `PROMETHEUS_RETENTION_SIZE` (`10GB`), whichever limit is reached first. Prometheus now
   sets an explicit `command:` that reproduces the image's default `--config.file` and
   `--storage.tsdb.path` flags alongside the two retention flags.
+- `kemp_exporter` v0.2.0 to the stack: Kemp/Progress LoadMaster metrics on port **9448**
+  (it moved off 9447, which stays with `nsr_exporter`), configured via `configs/kemp.yaml`
+  with `KEMP1_HOSTNAME` / `KEMP1_APIKEY` and pinnable with `KEMP_TAG`.
+- The `kemp-overview` dashboard, fetched from `fjacquet/kemp_exporter` at startup.
 - `pve_exporter` to the stack (11 exporters total): Proxmox VE metrics on port 9221,
   with token-based API auth (`PVE1_HOST`, `PVE1_TOKEN_ID`, `PVE1_TOKEN_SECRET`).
 - Six Proxmox dashboards fetched from `fjacquet/pve_exporter` at startup
