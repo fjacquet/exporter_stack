@@ -82,6 +82,41 @@ Credentials left unset fall back to a non-functional `changeme` placeholder so e
 exporter still boots. Replace them with real values for live data. For multi-instance
 monitoring, edit the relevant `configs/<exporter>.yaml` directly.
 
+## Persistence and retention
+
+Prometheus, Grafana and Alertmanager each keep their state in a **named Docker volume**, so
+a reboot (or a plain `docker compose down`) no longer loses metric history, Grafana users /
+dashboard edits / API keys, or Alertmanager silences and notification state.
+
+| Volume | Mounted at | Holds |
+|---|---|---|
+| `prometheus_data` | `/prometheus` | TSDB — all metric history |
+| `grafana_data` | `/var/lib/grafana` | Grafana SQLite DB: users, API keys, dashboard edits, prefs |
+| `alertmanager_data` | `/alertmanager` | silences + notification log |
+| `dashboards` | `/var/lib/grafana/dashboards` | dashboard JSON, refetched from upstream on every `up` |
+
+Each mount path is the image's *own* default (`--storage.tsdb.path`, `GF_PATHS_DATA`,
+`--storage.path`) — a wrong path would mount fine and persist nothing. Named volumes are
+used rather than host bind mounts so Docker handles ownership: Prometheus and Alertmanager
+run as uid 65534, Grafana as uid 472.
+
+Because `prometheus` now sets an explicit `command:`, it also reproduces the two flags from
+the image's default `CMD` (`--config.file`, `--storage.tsdb.path`) verbatim — dropping either
+would break startup or write the TSDB outside the volume.
+
+Retention is bounded on **both** axes, whichever is hit first (persisting without a bound
+just trades "loses everything on reboot" for "fills the disk in a few months"):
+
+| Variable | Default | Flag |
+|---|---|---|
+| `PROMETHEUS_RETENTION_TIME` | `30d` | `--storage.tsdb.retention.time` |
+| `PROMETHEUS_RETENTION_SIZE` | `10GB` | `--storage.tsdb.retention.size` |
+
+Both are overridable in `.env` and fall back to those defaults when unset.
+
+`docker compose down` keeps all four volumes. **`docker compose down -v` deletes them** —
+that is the only supported way to reset the stack's state.
+
 ## Targets without real hardware
 
 With placeholder credentials and unreachable example hosts:
