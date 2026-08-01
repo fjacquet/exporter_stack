@@ -15,7 +15,7 @@ docker compose up -d
 - **Grafana** → http://localhost:3000 (`admin`/`admin`) — one dashboard folder per exporter
 - **Prometheus** → http://localhost:9090 → *Status → Targets*
 
-Everything starts with no configuration: all 10 exporter images are pulled, the dashboards
+Everything starts with no configuration: all 31 exporter images are pulled, the dashboards
 are fetched from upstream, and Prometheus + Grafana come up. Without real credentials the
 exporters still run but report no live data (see [Targets without real hardware](#targets-without-real-hardware)).
 
@@ -148,6 +148,25 @@ With placeholder credentials and unreachable example hosts:
   entry (Task 12).
 
 This is expected. Point `configs/` and `.env` at real, reachable targets to get live data.
+
+## Keeping images and dashboards fresh
+
+Images are intentionally **unpinned** (`:latest`, via the `*_TAG` defaults), so refreshing
+the stack is just:
+
+```bash
+docker compose pull        # refresh every image
+docker compose up -d       # recreate what changed; re-runs dashboard-fetcher
+```
+
+`dashboard-fetcher` runs on every `up`, so dashboards are re-downloaded from each exporter's
+repo at the same time. `docker compose logs dashboard-fetcher` ends with a `fetched N/N
+dashboards` line — a mismatch there is the signal that a manifest path went stale.
+
+Container health comes from the **images' own `HEALTHCHECK`**, not from this compose file:
+Fred's exporters all serve always-200 `/livez` and `/readyz` and ship a `HEALTHCHECK` that
+probes `/livez`, so `docker compose ps` shows them `(healthy)` with no `healthcheck:` block
+here. Community exporter images vary — most ship none, and simply show `Up`.
 
 ## Alerting
 

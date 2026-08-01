@@ -25,6 +25,15 @@ All notable changes to this project are documented here. The format is based on
   with token-based API auth (`PVE1_HOST`, `PVE1_TOKEN_ID`, `PVE1_TOKEN_SECRET`).
 - Six Proxmox dashboards fetched from `fjacquet/pve_exporter` at startup
   (pve-cluster-overview, pve-node, pve-guest, pve-storage, pve-backup-dr, pve-ha-quorum).
+- README: how to refresh images and dashboards (`docker compose pull` + `up -d`), and a note
+  that container health comes from the images' own `HEALTHCHECK`, not from a `healthcheck:`
+  block in this compose file.
+
+### Changed
+- Refreshed every image with `docker compose pull` and re-ran `dashboard-fetcher`; the
+  manifest now resolves 98/98 dashboards across 30 folders. Images stay unpinned on
+  `:latest` by design — pull, don't pin.
+- README quick start said "all 10 exporter images"; the stack now runs 31 exporter services.
 
 ## [0.1.0] - 2026-06-16
 
